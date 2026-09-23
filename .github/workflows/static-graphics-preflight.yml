@@ -43,21 +43,30 @@ jobs:
               for item in root.findall(".//PackageReference")
               if item.attrib.get("Include") == "SkiaSharp"
           )
+
           version_base, revision = package_version.rsplit(".", 1)
-          skiasharp_version, angle_branch = version_base.split("-", 1)
-          if not revision.isdigit() or skiasharp_version != skia_reference:
-              raise SystemExit(f"Inconsistent package version: {package_version}, SkiaSharp: {skia_reference}")
+          prefix = f"{skia_reference}-"
+          if not version_base.startswith(prefix):
+              raise SystemExit(
+                  f"Inconsistent package version: {package_version}, SkiaSharp: {skia_reference}"
+              )
+          angle_branch = version_base[len(prefix):]
+
+          if not revision.isdigit() or not angle_branch:
+              raise SystemExit(
+                  f"Inconsistent package version: {package_version}, SkiaSharp: {skia_reference}"
+              )
+
           if os.environ.get("GITHUB_REF_TYPE") == "tag":
-              expected_tag = f"staticlink-avalonia-v{package_version}"
+              expected_tag = f"v{package_version}"
               if os.environ.get("GITHUB_REF_NAME") != expected_tag:
                   raise SystemExit(f"Release tag must be {expected_tag}")
 
           with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
               output.write(f"package_version={package_version}\n")
-              output.write(f"skiasharp_version={skiasharp_version}\n")
+              output.write(f"skiasharp_version={skia_reference}\n")
               output.write(f"angle_branch={angle_branch}\n")
           PY
-
       - name: Validate upstream refs and ANGLE patch
         env:
           SKIASHARP_VERSION: ${{ steps.versions.outputs.skiasharp_version }}
