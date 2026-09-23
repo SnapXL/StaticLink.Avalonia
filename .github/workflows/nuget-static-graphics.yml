@@ -49,6 +49,11 @@ jobs:
     with:
       skiasharp_version: ${{ needs.preflight.outputs.skiasharp_version }}
 
+  build-freebsd:
+    needs: preflight
+    uses: ./.github/workflows/static-graphics-freebsd.yml
+    with:
+      skiasharp_version: ${{ needs.preflight.outputs.skiasharp_version }}
   pack:
     runs-on: ubuntu-24.04
     needs:
@@ -56,6 +61,7 @@ jobs:
       - build-musl
       - build-windows
       - build-macos
+      - build-freebsd
     permissions:
       contents: read
     steps:
