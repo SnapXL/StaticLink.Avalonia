@@ -16,7 +16,7 @@ on:
         default: "4.154.0-preview.1"
         type: string
       angle_branch:
-        required: true
+        required: false
         default: "8059"
         type: string
 
