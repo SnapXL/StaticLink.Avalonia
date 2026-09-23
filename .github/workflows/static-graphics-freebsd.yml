@@ -1,0 +1,66 @@
+name: static-graphics-freebsd
+
+on:
+  workflow_call:
+    inputs:
+      skiasharp_version:
+        required: true
+        type: string
+  workflow_dispatch:
+    inputs:
+      skiasharp_version:
+        required: true
+        default: "4.154.0-preview.1"
+        type: string
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - rid: freebsd-x64
+            target_cpu: x64
+            vm_arch: x86-64
+            runner: ubuntu-24.04
+          - rid: freebsd-arm64
+            target_cpu: arm64
+            vm_arch: aarch64
+            runner: ubuntu-24.04
+    runs-on: ${{ matrix.runner }}
+    env:
+      SKIASHARP_VERSION: ${{ inputs.skiasharp_version }}
+      RID: ${{ matrix.rid }}
+      TARGET_CPU: ${{ matrix.target_cpu }}
+      LLVM_AR: llvm-ar
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Restore native build cache
+        uses: actions/cache@v4
+        with:
+          path: External/NativeStatic/.work
+          key: native-work-freebsd-${{ matrix.rid }}-${{ inputs.skiasharp_version }}-${{ hashFiles('External/NativeStatic/patches/*.patch', 'scripts/build-freebsd-static-graphics.sh') }}
+
+      - name: Build FreeBSD static graphics libraries inside FreeBSD VM
+        uses: vmactions/freebsd-vm@v1
+        with:
+          release: "14"
+          arch: ${{ matrix.vm_arch }}
+          envs: SKIASHARP_VERSION RID TARGET_CPU LLVM_AR
+          usesh: true
+          prepare: |
+            pkg update
+            pkg install -y git python3 llvm ninja pkgconf fontconfig libX11 libXext libxcb curl
+          run: |
+            scripts/build-static-graphics.sh all
+
+      - name: Normalize native build cache ownership
+        run: sudo chown -R "$(id -u):$(id -g)" External/NativeStatic/.work
+
+      - name: Upload FreeBSD static archives
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-static-${{ matrix.rid }}
+          path: External/NativeStatic/${{ matrix.rid }}/*
+          if-no-files-found: error

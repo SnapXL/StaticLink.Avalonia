@@ -7,17 +7,14 @@ Static native libraries for Avalonia single-file NativeAOT publishing.
 Choose the static graphics package that matches the Avalonia and SkiaSharp major versions used by your application.
 
 | Avalonia version | SkiaSharp version | `StaticLink.Avalonia` version |
-| --- | --- | --- |
-| 11 | 2.88.9 | `2.88.9-7151.10` |
-| 11 | 3.119.4 | `3.119.4-7922.1` |
-| 12 | 3.119.4 | `3.119.4-7922.1` |
-| 12 | 4.150.1 | `4.150.1-7922.1` |
+|------------------|-------------------|-------------------------------|
+| 12               | 4.154.0-preview.1 | `4.154.0-preview.1-8059.1`    |
 
 Example:
 ```xml
 <ItemGroup>
-  <PackageReference Include="Avalonia" Version="12.1.0" />
-  <PackageReference Include="StaticLink.Avalonia" Version="4.150.1-7922.1" />
+  <PackageReference Include="Avalonia" Version="12.1.3" />
+  <PackageReference Include="BrycensRanch.StaticLink.Avalonia" Version="4.154.0-preview.1-8059.1" />
 </ItemGroup>
 ```
 
@@ -29,8 +26,8 @@ For macOS, also reference `StaticLink.Avalonia.Native`. This package contains `l
 <!-- Avalonia 11.3.14 -->
 <PackageReference Include="StaticLink.Avalonia.Native" Version="11.3.14.1" />
 
-<!-- Avalonia 12.1.0 -->
-<PackageReference Include="StaticLink.Avalonia.Native" Version="12.1.0.1" />
+<!-- Avalonia 12 -->
+<PackageReference Include="BrycensRanch.StaticLink.Avalonia.Native" Version="12.1.3.1" />
 ```
 
 Add only the `StaticLink.Avalonia.Native` reference matching your Avalonia version.
@@ -43,7 +40,7 @@ On macOS, only Avalonia 12 with skia3/4 supports Metal. Avalonia 11 fully static
 dotnet publish -c Release -r win-x64 -p:PublishAot=true
 ```
 
-Use the RID you need, such as `win-x86`, `linux-x64`, `linux-arm64`, `osx-arm64`, or `osx-x64`.
+Use the RID you need, such as `win-x86`, `linux-x64`, `linux-arm64`, `osx-arm64`, or `osx-x64`, `freebsd-x64`, `freebsd-arm64`.
 
 
 ## Native Package Automation

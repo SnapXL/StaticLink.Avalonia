@@ -6,18 +6,11 @@ on:
       skiasharp_version:
         required: true
         type: string
-      angle_branch:
-        required: true
-        type: string
   workflow_dispatch:
     inputs:
       skiasharp_version:
         required: true
-        default: "4.150.1"
-        type: string
-      angle_branch:
-        required: true
-        default: "7922"
+        default: "4.154.0-preview.1"
         type: string
 
 jobs:
@@ -33,7 +26,6 @@ jobs:
     runs-on: macos-15
     env:
       SKIASHARP_VERSION: ${{ inputs.skiasharp_version }}
-      ANGLE_BRANCH: ${{ inputs.angle_branch }}
       RID: ${{ matrix.rid }}
       TARGET_CPU: ${{ matrix.target_cpu }}
       WORK_DIR: ${{ github.workspace }}/External/NativeStatic/.work
@@ -45,7 +37,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: External/NativeStatic/.work
-          key: native-work-macos-${{ matrix.rid }}-${{ inputs.skiasharp_version }}-${{ inputs.angle_branch }}-${{ hashFiles('External/NativeStatic/patches/*.patch', 'scripts/build-macos-static-graphics.sh') }}
+          key: native-work-macos-${{ matrix.rid }}-${{ inputs.skiasharp_version }}-${{ hashFiles('External/NativeStatic/patches/*.patch', 'scripts/build-macos-static-graphics.sh') }}
 
       - name: Install native build dependencies
         run: brew install ninja

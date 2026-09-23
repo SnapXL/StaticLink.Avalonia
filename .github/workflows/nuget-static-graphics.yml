@@ -18,7 +18,7 @@ on:
       - "staticlink-avalonia-v*"
 
 env:
-  DOTNET_ALPINE_IMAGE: mcr.microsoft.com/dotnet/sdk:10.0.302-alpine3.23
+  DOTNET_ALPINE_IMAGE: mcr.microsoft.com/dotnet/sdk:10.0-alpine3.24
 
 jobs:
   preflight:
@@ -29,29 +29,25 @@ jobs:
     uses: ./.github/workflows/static-graphics-linux.yml
     with:
       skiasharp_version: ${{ needs.preflight.outputs.skiasharp_version }}
-      angle_branch: ${{ needs.preflight.outputs.angle_branch }}
 
   build-musl:
     needs: preflight
     uses: ./.github/workflows/static-graphics-musl.yml
     with:
       skiasharp_version: ${{ needs.preflight.outputs.skiasharp_version }}
-      angle_branch: ${{ needs.preflight.outputs.angle_branch }}
-      dotnet_alpine_image: mcr.microsoft.com/dotnet/sdk:10.0.302-alpine3.23
+      dotnet_alpine_image: mcr.microsoft.com/dotnet/sdk:10.0-alpine3.24
 
   build-windows:
     needs: preflight
     uses: ./.github/workflows/static-graphics-windows.yml
     with:
       skiasharp_version: ${{ needs.preflight.outputs.skiasharp_version }}
-      angle_branch: ${{ needs.preflight.outputs.angle_branch }}
 
   build-macos:
     needs: preflight
     uses: ./.github/workflows/static-graphics-macos.yml
     with:
       skiasharp_version: ${{ needs.preflight.outputs.skiasharp_version }}
-      angle_branch: ${{ needs.preflight.outputs.angle_branch }}
 
   pack:
     runs-on: ubuntu-24.04
@@ -79,7 +75,7 @@ jobs:
 
       - name: Move static archives into RID directories
         run: |
-          for rid in win-x64 win-x86 win-arm64 linux-x64 linux-arm64 linux-musl-x64 linux-musl-arm64 osx-x64 osx-arm64; do
+          for rid in win-x64 win-x86 win-arm64 linux-x64 linux-arm64 linux-musl-x64 linux-musl-arm64 osx-x64 osx-arm64 freebsd-x64 freebsd-arm64; do
             mkdir -p "External/NativeStatic/$rid"
             mv "External/NativeStatic/native-static-$rid"/* "External/NativeStatic/$rid/"
             rmdir "External/NativeStatic/native-static-$rid"
@@ -91,14 +87,12 @@ jobs:
 
       - name: Verify static archives
         run: |
-          for rid in linux-x64 linux-arm64 linux-musl-x64 linux-musl-arm64 osx-x64 osx-arm64; do
+          for rid in linux-x64 linux-arm64 linux-musl-x64 linux-musl-arm64 osx-x64 osx-arm64 freebsd-x64 freebsd-arm64; do
             test -f External/NativeStatic/$rid/native/libskia.a
             test -f External/NativeStatic/$rid/native/libSkiaSharp.a
             test -f External/NativeStatic/$rid/native/libHarfBuzzSharp.a
-            test -f External/NativeStatic/$rid/native/libANGLE_static.a
-            test -f External/NativeStatic/$rid/native/libGLESv2_static.a
           done
-
+          
           for rid in win-x64 win-x86 win-arm64; do
             test -f External/NativeStatic/$rid/native/skia.lib
             test -f External/NativeStatic/$rid/native/SkiaSharp.lib
@@ -114,7 +108,7 @@ jobs:
       - name: Verify portable NuGet paths
         shell: bash
         run: |
-          package=$(find artifacts/nuget -name 'StaticLink.Avalonia.*.nupkg' ! -name 'StaticLink.Avalonia.Native.*.nupkg' -print -quit)
+          package=$(find artifacts/nuget -name 'BrycensRanch.StaticLink.Avalonia.*.nupkg' ! -name 'BrycensRanch.StaticLink.Avalonia.Native.*.nupkg' -print -quit)
           test -n "$package"
           if unzip -Z1 "$package" | grep -F '\'; then
             echo "NuGet package contains Windows-only backslash paths."
@@ -156,11 +150,11 @@ jobs:
           - rid: linux-musl-arm64
             runner: ubuntu-24.04-arm
           - rid: osx-x64
-            runner: macos-15
-            avalonia_version: 11.3.14
+            runner: macos-15-intel
+            avalonia_version: 12.1.3
           - rid: osx-arm64
             runner: macos-15
-            avalonia_version: 11.3.14
+            avalonia_version: 12.1.3
     runs-on: ${{ matrix.runner }}
     steps:
       - uses: actions/checkout@v4
@@ -190,44 +184,102 @@ jobs:
 
       - name: Publish Avalonia single-file smoke app
         if: ${{ !startsWith(matrix.rid, 'linux-musl-') }}
-        shell: pwsh
         run: |
-          $ErrorActionPreference = "Stop"
-          $package = Get-ChildItem -Path "artifacts/nuget" -Filter "StaticLink.Avalonia.*.nupkg" | Where-Object { $_.Name -notlike "StaticLink.Avalonia.Native.*" } | Select-Object -First 1
-          if (-not $package) { throw "StaticLink NuGet package was not downloaded." }
-          if ($package.BaseName -notmatch '^StaticLink\.Avalonia\.(.+)$') { throw "Unexpected package name: $($package.Name)" }
-          $version = $Matches[1]
-          $avaloniaVersion = "${{ matrix.avalonia_version }}"
-          if (-not $avaloniaVersion) { $avaloniaVersion = "11.3.14" }
-          $projectDir = Join-Path $PWD "artifacts/avalonia-smoke-src"
-          pwsh ./scripts/create-avalonia-smoke.ps1 -ProjectDir $projectDir -NuGetSource (Resolve-Path "artifacts/nuget") -StaticLinkVersion $version -AvaloniaVersion $avaloniaVersion
-          dotnet publish (Join-Path $projectDir "AvaloniaStaticLinkSmoke.csproj") `
-            -c Release `
-            -r "${{ matrix.rid }}" `
-            --configfile (Join-Path $projectDir "NuGet.config") `
-            /p:PublishAot=true `
-            /p:SelfContained=true `
-            /p:PublishSingleFile=true `
-            /p:StripSymbols=true `
+          set -euo pipefail
+
+          package=""
+          for f in artifacts/nuget/BrycensRanch.StaticLink.Avalonia.*.nupkg; do
+            [ -e "$f" ] || continue
+            case "$f" in
+              *BrycensRanch.StaticLink.Avalonia.Native.*) continue ;;
+            esac
+            package="$f"
+            break
+          done
+
+          if [ -z "$package" ]; then
+            echo "StaticLink NuGet package was not downloaded." >&2
+            exit 1
+          fi
+
+          name="${package##*/}"
+          name="${name%.nupkg}"
+          prefix="BrycensRanch.StaticLink.Avalonia."
+          case "$name" in
+            "$prefix"*) version="${name#"$prefix"}" ;;
+            *)
+              echo "Unexpected package name: $name" >&2
+              exit 1
+              ;;
+          esac
+
+          avalonia_version="${{ matrix.avalonia_version }}"
+          if [ -z "$avalonia_version" ]; then
+            avalonia_version="12.1.3"
+          fi
+
+          project_dir="$PWD/artifacts/avalonia-smoke-src"
+
+          ./scripts/create-avalonia-smoke.sh \
+            --project-dir "$project_dir" \
+            --nuget-source "$(cd artifacts/nuget && pwd)" \
+            --static-link-version "$version" \
+            --avalonia-version "$avalonia_version"
+
+          dotnet publish "$project_dir/AvaloniaStaticLinkSmoke.csproj" \
+            -c Release \
+            -r "${{ matrix.rid }}" \
+            --configfile "$project_dir/NuGet.config" \
+            /p:PublishAot=true \
+            /p:SelfContained=true \
+            /p:PublishSingleFile=true \
+            /p:StripSymbols=true \
             /p:PublishDir="$PWD/artifacts/smoke-${{ matrix.rid }}/"
 
       - name: Publish Avalonia musl smoke app
         if: ${{ startsWith(matrix.rid, 'linux-musl-') }}
-        shell: pwsh
         run: |
-          $ErrorActionPreference = "Stop"
-          $package = Get-ChildItem -Path "artifacts/nuget" -Filter "StaticLink.Avalonia.*.nupkg" | Where-Object { $_.Name -notlike "StaticLink.Avalonia.Native.*" } | Select-Object -First 1
-          if (-not $package) { throw "StaticLink NuGet package was not downloaded." }
-          if ($package.BaseName -notmatch '^StaticLink\.Avalonia\.(.+)$') { throw "Unexpected package name: $($package.Name)" }
-          $version = $Matches[1]
-          $projectDir = Join-Path $PWD "artifacts/avalonia-smoke-src"
-          pwsh ./scripts/create-avalonia-smoke.ps1 -ProjectDir $projectDir -NuGetSource "/workspace/artifacts/nuget" -StaticLinkVersion $version -AvaloniaVersion "11.3.14"
-          docker run --rm `
-            -v "${{ github.workspace }}:/workspace" `
-            -w /workspace `
-            "${{ env.DOTNET_ALPINE_IMAGE }}" `
-            sh -c "apk add --no-cache clang lld build-base zlib-dev fontconfig-dev && dotnet publish /workspace/artifacts/avalonia-smoke-src/AvaloniaStaticLinkSmoke.csproj -c Release -r ${{ matrix.rid }} --configfile /workspace/artifacts/avalonia-smoke-src/NuGet.config /p:PublishAot=true /p:SelfContained=true /p:PublishSingleFile=true /p:StripSymbols=true /p:PublishDir=/workspace/artifacts/smoke-${{ matrix.rid }}/"
+          set -euo pipefail
 
+          package=""
+          for f in artifacts/nuget/BrycensRanch.StaticLink.Avalonia.*.nupkg; do
+            [ -e "$f" ] || continue
+            case "$f" in
+              *BrycensRanch.StaticLink.Avalonia.Native.*) continue ;;
+            esac
+            package="$f"
+            break
+          done
+
+          if [ -z "$package" ]; then
+            echo "StaticLink NuGet package was not downloaded." >&2
+            exit 1
+          fi
+
+          name="${package##*/}"
+          name="${name%.nupkg}"
+          prefix="BrycensRanch.StaticLink.Avalonia."
+          case "$name" in
+            "$prefix"*) version="${name#"$prefix"}" ;;
+            *)
+              echo "Unexpected package name: $name" >&2
+              exit 1
+              ;;
+          esac
+
+          project_dir="$PWD/artifacts/avalonia-smoke-src"
+
+          ./scripts/create-avalonia-smoke.sh \
+            --project-dir "$project_dir" \
+            --nuget-source "/workspace/artifacts/nuget" \
+            --static-link-version "$version" \
+            --avalonia-version "12.1.3"
+
+          docker run --rm \
+            -v "${{ github.workspace }}:/workspace" \
+            -w /workspace \
+            "${{ env.DOTNET_ALPINE_IMAGE }}" \
+            sh -c "apk add --no-cache clang lld build-base zlib-dev fontconfig-dev && dotnet publish /workspace/artifacts/avalonia-smoke-src/AvaloniaStaticLinkSmoke.csproj -c Release -r ${{ matrix.rid }} --configfile /workspace/artifacts/avalonia-smoke-src/NuGet.config /p:PublishAot=true /p:SelfContained=true /p:PublishSingleFile=true /p:StripSymbols=true /p:PublishDir=/workspace/artifacts/smoke-${{ matrix.rid }}/"
       - name: Verify no dynamic graphics libraries remain
         shell: pwsh
         run: |
@@ -380,27 +432,44 @@ jobs:
           path: artifacts/nuget
 
       - name: Publish Avalonia 12 macOS arm64 smoke app
-        shell: pwsh
+        shell: bash
         run: |
-          $ErrorActionPreference = "Stop"
-          $package = Get-ChildItem -Path "artifacts/nuget" -Filter "StaticLink.Avalonia.*.nupkg" | Where-Object { $_.Name -notlike "StaticLink.Avalonia.Native.*" } | Select-Object -First 1
-          if (-not $package) { throw "StaticLink NuGet package was not downloaded." }
-          if ($package.BaseName -notmatch '^StaticLink\.Avalonia\.(.+)$') { throw "Unexpected package name: $($package.Name)" }
-          $projectDir = Join-Path $PWD "artifacts/avalonia-metal-smoke-src"
-          pwsh ./scripts/create-avalonia-smoke.ps1 `
-            -ProjectDir $projectDir `
-            -NuGetSource (Resolve-Path "artifacts/nuget") `
-            -StaticLinkVersion $Matches[1] `
-            -AvaloniaVersion "12.1.0" `
-            -StaticLinkNativeVersion "12.1.0.1"
-          dotnet publish (Join-Path $projectDir "AvaloniaStaticLinkSmoke.csproj") `
-            -c Release `
-            -r osx-arm64 `
-            --configfile (Join-Path $projectDir "NuGet.config") `
-            /p:PublishAot=true `
-            /p:SelfContained=true `
-            /p:PublishSingleFile=true `
-            /p:StripSymbols=true `
+          set -euo pipefail
+
+          package="$(find artifacts/nuget -type f \
+            -name 'BrycensRanch.StaticLink.Avalonia.*.nupkg' \
+            -not -name 'BrycensRanch.StaticLink.Avalonia.Native.*.nupkg' \
+            | head -n 1)"
+
+          if [ -z "$package" ]; then
+            echo "StaticLink NuGet package was not downloaded." >&2
+            exit 1
+          fi
+
+          name="$(basename "$package" .nupkg)"
+          version="${name#BrycensRanch.StaticLink.Avalonia.}"
+          if [ "$version" = "$name" ]; then
+            echo "Unexpected package name: $name" >&2
+            exit 1
+          fi
+
+          project_dir="$PWD/artifacts/avalonia-metal-smoke-src"
+
+          ./scripts/create-avalonia-smoke.sh \
+            --project-dir "$project_dir" \
+            --nuget-source "$(cd artifacts/nuget && pwd)" \
+            --static-link-version "$version" \
+            --avalonia-version "12.1.3" \
+            --static-link-native-version "12.1.3.1"
+
+          dotnet publish "$project_dir/AvaloniaStaticLinkSmoke.csproj" \
+            -c Release \
+            -r osx-arm64 \
+            --configfile "$project_dir/NuGet.config" \
+            /p:PublishAot=true \
+            /p:SelfContained=true \
+            /p:PublishSingleFile=true \
+            /p:StripSymbols=true \
             /p:PublishDir="$PWD/artifacts/smoke-osx-arm64-metal/"
 
       - name: Verify fully static third-party libraries
@@ -450,13 +519,123 @@ jobs:
               if result.returncode != 0 or marker not in output.splitlines():
                   raise SystemExit(f"Avalonia {renderer} smoke app failed with exit code {result.returncode}.")
           PY
+  smoke-freebsd:
+    runs-on: ubuntu-latest
+    needs: pack
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - rid: freebsd-x64
+            arch: x86_64
+          - rid: freebsd-arm64
+            arch: aarch64
+    steps:
+      - uses: actions/checkout@v4
 
+      - name: Download NuGet package
+        uses: actions/download-artifact@v4
+        with:
+          name: staticlink-avalonia-nuget
+          path: artifacts/nuget
+
+      - name: Extract package version
+        id: pkg
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $package = Get-ChildItem -Path "artifacts/nuget" -Filter "BrycensRanch.StaticLink.Avalonia.*.nupkg" |
+                  Where-Object { $_.Name -notlike "BrycensRanch.StaticLink.Avalonia.Native.*" } |
+                  Select-Object -First 1
+          if (-not $package) { throw "StaticLink NuGet package was not downloaded." }
+          if ($package.BaseName -notmatch '^StaticLink\.Avalonia\.(.+)$') { throw "Unexpected package name: $($package.Name)" }
+          "version=$($Matches[1])" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+
+      - name: Publish and run Avalonia smoke app on FreeBSD
+        uses: vmactions/freebsd-vm@v1
+        with:
+          release: "14"
+          arch: ${{ matrix.arch }}
+          usesh: true
+          prepare: |
+            pkg install -y \
+              clang lld \
+              icu libunwind libinotify \
+              krb5 openssl \
+              fontconfig freetype2 \
+              xorg-vfbserver mesa-devel xauth \
+              libepoll-shim wget unzip
+
+            # Install the .NET 10 SDK for FreeBSD from the community source-build.
+            # x64 and arm64 tarballs are published per release.
+            cd $HOME
+            wget -q "https://github.com/sec/dotnet-core-freebsd-source-build/releases/download/10.0.110-vmr/dotnet-sdk-10.0.110-${{ matrix.rid }}.tar.gz"
+            mkdir -p $HOME/dotnet
+            tar -xzf "dotnet-sdk-10.0.110-${{ matrix.rid }}.tar.gz" -C $HOME/dotnet
+            export DOTNET_ROOT=$HOME/dotnet
+            export PATH=$HOME/dotnet:$PATH
+            dotnet --info
+            wget -q "https://svn.exactcode.de/t2/tags/8.0/package/xorg/xorg-server/xvfb-run.sh"
+            mv xvfb-run.sh /usr/local/bin/xvfb-run
+            chmod +x /usr/local/bin/xvfb-run
+          run: |
+            set -e
+            export DOTNET_OPENSSL_VERSION_OVERRIDE=35
+            export DOTNET_ROOT=$HOME/dotnet
+            export PATH=$HOME/dotnet:$PATH
+            export LD_PRELOAD=/usr/local/lib/libepoll-shim.so
+
+            PROJECT_DIR="$GITHUB_WORKSPACE/artifacts/avalonia-freebsd-smoke-src"
+            "$GITHUB_WORKSPACE/scripts/create-avalonia-smoke.sh" \
+              --project-dir "$PROJECT_DIR" \
+              --nuget-source "$GITHUB_WORKSPACE/artifacts/nuget" \
+              --static-link-version "${{ steps.pkg.outputs.version }}" \
+              --avalonia-version "12.1.3"
+
+
+            dotnet publish "$PROJECT_DIR/AvaloniaStaticLinkSmoke.csproj" \
+              -c Release \
+              -r "${{ matrix.rid }}" \
+              --configfile "$PROJECT_DIR/NuGet.config" \
+              /p:PublishAot=true \
+              /p:SelfContained=true \
+              /p:PublishSingleFile=true \
+              /p:StripSymbols=true \
+              /p:PublishDir="$GITHUB_WORKSPACE/artifacts/smoke-${{ matrix.rid }}/"
+
+            PUBLISH_DIR="$GITHUB_WORKSPACE/artifacts/smoke-${{ matrix.rid }}"
+            for lib in libSkiaSharp.so libHarfBuzzSharp.so libSkiaSharp.dll libHarfBuzzSharp.dll; do
+              if find "$PUBLISH_DIR" -name "$lib" | grep -q .; then
+                echo "Unexpected dynamic graphics library: $lib" >&2
+                find "$PUBLISH_DIR" -name "$lib" >&2
+                exit 1
+              fi
+            done
+
+            cd "$PUBLISH_DIR"
+            chmod +x ./AvaloniaStaticLinkSmoke
+            timeout 15s xvfb-run -a ./AvaloniaStaticLinkSmoke || code=$?
+            if [ "${code:-0}" = "124" ] || [ "${code:-0}" = "143" ]; then
+              echo "Avalonia FreeBSD smoke app stayed alive for 15 seconds."
+              exit 0
+            fi
+            exit "${code:-0}"
+
+      - name: Upload FreeBSD smoke app
+        uses: actions/upload-artifact@v4
+        with:
+          name: avalonia-smoke-${{ matrix.rid }}
+          path: artifacts/smoke-${{ matrix.rid }}/**
+          if-no-files-found: error
   publish-nuget:
     runs-on: ubuntu-24.04
     needs:
       - pack
       - smoke-avalonia
       - smoke-macos-metal
+      - smoke-freebsd
     steps:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
@@ -493,6 +672,7 @@ jobs:
       - pack
       - smoke-avalonia
       - smoke-macos-metal
+      - smoke-freebsd
       - publish-nuget
     if: ${{ startsWith(github.ref, 'refs/tags/staticlink-avalonia-v') || (github.event_name == 'workflow_dispatch' && inputs.publish_to_release == true) }}
     permissions:
@@ -533,8 +713,8 @@ jobs:
             release_tag="${GITHUB_REF_NAME}"
             title="${GITHUB_REF_NAME}"
           else
-            release_tag="staticlink-avalonia-v${PACKAGE_VERSION}"
-            title="StaticLink.Avalonia ${PACKAGE_VERSION}"
+            release_tag="v${PACKAGE_VERSION}"
+            title="BrycensRanch.StaticLink.Avalonia ${PACKAGE_VERSION}"
           fi
 
           if gh release view "$release_tag" >/dev/null 2>&1; then
@@ -543,5 +723,5 @@ jobs:
             gh release create "$release_tag" release-files/* \
               --target "$GITHUB_SHA" \
               --title "$title" \
-              --notes "NuGet package plus Avalonia 11.3.14 NativeAOT single-file smoke apps for win-x64, win-x86, win-arm64, linux-x64, linux-arm64, linux-musl-x64, linux-musl-arm64, osx-x64, and osx-arm64."
+              --notes "NuGet package plus Avalonia 12.1.3 NativeAOT single-file smoke apps for win-x64, win-x86, win-arm64, linux-x64, linux-arm64, linux-musl-x64, linux-musl-arm64, osx-x64, osx-arm64, freebsd-x64, and freebsd-arm64."
           fi

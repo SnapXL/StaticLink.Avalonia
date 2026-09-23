@@ -10,9 +10,9 @@ internal static class Program
     public static AppBuilder BuildAvaloniaApp()
     {
         var builder = AppBuilder.Configure<App>()
-            .UsePlatformDetect()
             .LogToTrace();
 
+        builder = !OperatingSystem.IsFreeBSD() ? builder.UsePlatformDetect() : builder.UseSkia().UseX11();
         if (OperatingSystem.IsWindows())
         {
             builder = builder.With(new Win32PlatformOptions
@@ -31,6 +31,7 @@ internal static class Program
             {
                 RenderingMode =
                 [
+                    X11RenderingMode.Egl,
                     X11RenderingMode.Glx,
                     X11RenderingMode.Software
                 ]

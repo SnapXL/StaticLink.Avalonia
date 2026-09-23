@@ -6,10 +6,8 @@ WORK_DIR="${WORK_DIR:-$ROOT_DIR/External/NativeStatic/.work}"
 TARGET_CPU="${TARGET_CPU:-arm64}"
 RID="${RID:-osx-$TARGET_CPU}"
 OUTPUT_DIR="${OUTPUT_DIR:-$ROOT_DIR/External/NativeStatic/$RID}"
-SKIASHARP_VERSION="${SKIASHARP_VERSION:-4.150.1}"
-ANGLE_BRANCH="${ANGLE_BRANCH:-7922}"
+SKIASHARP_VERSION="${SKIASHARP_VERSION:-4.154.0-preview.1}"
 BUILD_JOBS="${BUILD_JOBS:-$(sysctl -n hw.ncpu)}"
-ANGLE_PATCH_DIR="${ANGLE_PATCH_DIR:-$ROOT_DIR/External/NativeStatic/patches}"
 SKIA_DEPS_RETRIES="${SKIA_DEPS_RETRIES:-3}"
 
 require_cmd() {
@@ -132,7 +130,6 @@ skia_use_freetype = false
 skia_use_harfbuzz = false
 skia_use_icu = false
 skia_use_piex = false
-skia_use_sfntly = false
 skia_use_system_expat = false
 skia_use_system_libjpeg_turbo = false
 skia_use_system_libpng = false
@@ -154,94 +151,12 @@ EOF_ARGS
   copy_first_existing "$OUTPUT_DIR/libHarfBuzzSharp.a" "$out_dir/libHarfBuzzSharp.a" "$out_dir/obj/libHarfBuzzSharp.a"
 }
 
-sync_angle() {
-  local src="$WORK_DIR/ANGLE-$ANGLE_BRANCH"
-  if [[ ! -d "$src/.git" ]]; then
-    git clone --depth 1 --branch "chromium/$ANGLE_BRANCH" https://github.com/google/angle.git "$src"
-  else
-    git -C "$src" fetch --depth 1 origin "chromium/$ANGLE_BRANCH"
-    git -C "$src" checkout -q FETCH_HEAD
-  fi
-  echo "$src"
-}
-
-apply_angle_patches() {
-  local src="$1"
-  local patch="$ANGLE_PATCH_DIR/angle-chromium-$ANGLE_BRANCH.patch"
-
-  if ! git -C "$src" grep -q 'angle_static_library("libANGLE_static")' -- BUILD.gn; then
-    python3 - "$src/BUILD.gn" <<'PY'
-import pathlib
-import re
-import sys
-
-path = pathlib.Path(sys.argv[1])
-text = path.read_text()
-targets = '''angle_static_library("libANGLE_static") {
-  complete_static_lib = true
-  public_deps = [ ":libANGLE" ]
-}
-
-angle_static_library("libANGLE_with_capture_static") {
-  complete_static_lib = true
-  public_deps = [ ":libANGLE_with_capture" ]
-}
-
-angle_static_library("libGLESv2_static") {
-'''
-text = re.sub(r'^angle_static_library\("libGLESv2_static"\) \{', targets, text, count=1, flags=re.M)
-text = re.sub(r'^angle_static_library\("libGLESv2_static"\) \{\n  sources = libglesv2_sources', 'angle_static_library("libGLESv2_static") {\n  complete_static_lib = true\n  sources = libglesv2_sources', text, count=1, flags=re.M)
-path.write_text(text)
-PY
-  fi
-
-  if [[ -f "$patch" ]] && git -C "$src" grep -q "'third_party/catapult'" -- DEPS; then
-    git -C "$src" apply "$patch"
-  fi
-}
-
-build_angle() {
-  ensure_tools
-  ensure_depot_tools
-  local src
-  src="$(sync_angle)"
-  mkdir -p "$OUTPUT_DIR"
-  apply_angle_patches "$src"
-  cd "$src"
-  python3 scripts/bootstrap.py
-  gclient sync -f -D -R
-
-  local out_dir="$src/out/mac-static-$TARGET_CPU"
-  mkdir -p "$out_dir"
-  cat >"$out_dir/args.gn" <<EOF_ARGS
-target_os = "mac"
-target_cpu = "$TARGET_CPU"
-is_debug = false
-is_component_build = false
-is_clang = true
-use_lld = false
-use_thin_lto = false
-symbol_level = 0
-angle_build_tests = false
-build_angle_deqp_tests = false
-angle_enable_swiftshader = false
-angle_enable_vulkan = false
-angle_enable_wgpu = false
-EOF_ARGS
-
-  gn gen "$out_dir"
-  ninja -C "$out_dir" -j "$BUILD_JOBS" libANGLE_static libGLESv2_static
-  copy_first_existing "$OUTPUT_DIR/libANGLE_static.a" "$out_dir/libANGLE_static.a" "$out_dir/obj/libANGLE_static.a" "$out_dir/obj/libANGLE_static/libANGLE_static.a"
-  copy_first_existing "$OUTPUT_DIR/libGLESv2_static.a" "$out_dir/libGLESv2_static.a" "$out_dir/obj/libGLESv2_static.a" "$out_dir/obj/libGLESv2_static/libGLESv2_static.a"
-}
-
 main() {
   mkdir -p "$WORK_DIR" "$OUTPUT_DIR"
   case "${1:-all}" in
     skia) build_skia ;;
-    angle) build_angle ;;
-    all) build_skia; build_angle ;;
-    *) echo "Usage: scripts/build-macos-static-graphics.sh [skia|angle|all]" >&2; exit 1 ;;
+    all) build_skia ;;
+    *) echo "Usage: scripts/build-macos-static-graphics.sh [skia]" >&2; exit 1 ;;
   esac
 }
 

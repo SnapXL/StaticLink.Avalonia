@@ -6,21 +6,20 @@
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
     <PublishAot>true</PublishAot>
     <SelfContained>true</SelfContained>
     <PublishSingleFile>true</PublishSingleFile>
     <PublishTrimmed>true</PublishTrimmed>
     <PublishReadyToRun>false</PublishReadyToRun>
     <InvariantGlobalization>true</InvariantGlobalization>
-    <AvaloniaVersion Condition="'$(AvaloniaVersion)' == ''">11.3.14</AvaloniaVersion>
+    <AvaloniaVersion Condition="'$(AvaloniaVersion)' == ''">12.1.3</AvaloniaVersion>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Avalonia" Version="$(AvaloniaVersion)" />
     <PackageReference Include="Avalonia.Desktop" Version="$(AvaloniaVersion)" />
-    <PackageReference Include="Avalonia.Themes.Fluent" Version="$(AvaloniaVersion)" />
-    <PackageReference Include="StaticLink.Avalonia" Version="$(StaticLinkVersion)" Condition="'$(StaticLinkVersion)' != ''" />
-    <PackageReference Include="StaticLink.Avalonia.Native" Version="$(StaticLinkNativeVersion)" Condition="'$(StaticLinkNativeVersion)' != ''" />
+    <PackageReference Include="FluentAvaloniaUI" Version="3.1.0" />
+    <PackageReference Include="BrycensRanch.StaticLink.Avalonia" Version="$(StaticLinkVersion)" Condition="'$(StaticLinkVersion)' != ''" />
+    <PackageReference Include="BrycensRanch.StaticLink.Avalonia.Native" Version="$(StaticLinkNativeVersion)" Condition="'$(StaticLinkNativeVersion)' != ''" />
   </ItemGroup>
 </Project>

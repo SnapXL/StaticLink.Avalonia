@@ -1,7 +1,10 @@
-<Application xmlns="https://github.com/avaloniaui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             x:Class="AvaloniaStaticLinkSmoke.App">
-  <Application.Styles>
-    <FluentTheme />
-  </Application.Styles>
+<Application
+    x:Class="AvaloniaStaticLinkSmoke.App"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:styling="clr-namespace:FluentAvalonia.Styling;assembly=FluentAvalonia"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Application.Styles>
+        <!--  As of preview5, these properties now default to false  -->
+        <styling:FluentAvaloniaTheme PreferSystemTheme="True" PreferUserAccentColor="True" />
+    </Application.Styles>
 </Application>
