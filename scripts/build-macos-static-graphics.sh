@@ -35,6 +35,9 @@ ensure_depot_tools() {
     git -C "$depot_dir" pull --ff-only
   fi
   export PATH="$depot_dir:$PATH"
+  if [[ ! -f "$depot_dir/python3_bin_reldir.txt" ]]; then
+    "$depot_dir/ensure_bootstrap"
+  fi
 }
 
 copy_first_existing() {
