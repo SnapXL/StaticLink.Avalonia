@@ -558,9 +558,6 @@ function Assert-AngleVisualStudioVersion {
     if ($env:VisualStudioVersion -and -not ($env:VisualStudioVersion -in @("18.0"))) {
         throw "ANGLE $AngleBranch requires Visual Studio 2026, but VisualStudioVersion is $env:VisualStudioVersion. Use windows-2025-vs2026 or a VS 2026 developer prompt."
     }
-    if ($env:GYP_MSVS_OVERRIDE_PATH -and ($env:GYP_MSVS_OVERRIDE_PATH -match '\\Microsoft Visual Studio\\18\\')) {
-        throw "ANGLE $AngleBranch requires Visual Studio 2026, but GYP_MSVS_OVERRIDE_PATH points to $env:GYP_MSVS_OVERRIDE_PATH. Use windows-2025-vs2026 or a VS 2026 developer prompt."
-    }
 }
 
 function Test-AnglePatch {
