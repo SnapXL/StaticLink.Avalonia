@@ -137,6 +137,7 @@ skia_use_system_libwebp = false
 skia_use_system_zlib = false
 skia_use_vulkan = false
 skia_use_xps = false
+skia_use_partition_alloc = false
 cc = "clang"
 cxx = "clang++"
 ar = "ar"

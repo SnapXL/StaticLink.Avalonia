@@ -442,6 +442,7 @@ skia_use_system_libwebp = false
 skia_use_system_zlib = false
 skia_use_vulkan = false
 skia_use_xps = true
+skia_use_partition_alloc = false
 extra_cflags = [ "-DSKIA_C_DLL" ]
 extra_cflags_cc = [ "/GR" ]
 "@ | Set-Content -Path (Join-Path $outDir "args.gn") -Encoding ASCII
