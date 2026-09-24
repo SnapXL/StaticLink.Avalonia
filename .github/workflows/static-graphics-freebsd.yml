@@ -51,7 +51,7 @@ jobs:
           usesh: true
           prepare: |
             pkg update
-            pkg install -y git python3 llvm ninja pkgconf fontconfig libX11 libXext libxcb curl
+            pkg install -y git python3 llvm ninja pkgconf fontconfig libX11 libXext libxcb curl gn
           run: |
             scripts/build-freebsd-static-graphics.sh all
 
