@@ -24,7 +24,7 @@ if (-not $env:DEPOT_TOOLS_BOOTSTRAP_PYTHON3) {
 }
 if ($env:DEPOT_TOOLS_WIN_TOOLCHAIN -eq "0") {
     if (-not $env:GYP_MSVS_VERSION) {
-        $env:GYP_MSVS_VERSION = "17.0"
+        $env:GYP_MSVS_VERSION = "18.0"
     }
     if (-not $env:GYP_MSVS_OVERRIDE_PATH) {
         if ($env:VSINSTALLDIR) {
@@ -555,11 +555,11 @@ angle_static_library("libGLESv2_static") {
 }
 
 function Assert-AngleVisualStudioVersion {
-    if ($env:VisualStudioVersion -and -not ($env:VisualStudioVersion -in @("17.0", "16.0", "15.0"))) {
-        throw "ANGLE $AngleBranch requires Visual Studio 2022/2019/2017, but VisualStudioVersion is $env:VisualStudioVersion. Use windows-2022 or a VS 2022 developer prompt."
+    if ($env:VisualStudioVersion -and -not ($env:VisualStudioVersion -in @("18.0"))) {
+        throw "ANGLE $AngleBranch requires Visual Studio 2026, but VisualStudioVersion is $env:VisualStudioVersion. Use windows-2025-vs2026 or a VS 2026 developer prompt."
     }
     if ($env:GYP_MSVS_OVERRIDE_PATH -and ($env:GYP_MSVS_OVERRIDE_PATH -match '\\Microsoft Visual Studio\\18\\')) {
-        throw "ANGLE $AngleBranch requires Visual Studio 2022/2019/2017, but GYP_MSVS_OVERRIDE_PATH points to $env:GYP_MSVS_OVERRIDE_PATH. Use windows-2022 or a VS 2022 developer prompt."
+        throw "ANGLE $AngleBranch requires Visual Studio 2026, but GYP_MSVS_OVERRIDE_PATH points to $env:GYP_MSVS_OVERRIDE_PATH. Use windows-2025-vs2026 or a VS 2026 developer prompt."
     }
 }
 

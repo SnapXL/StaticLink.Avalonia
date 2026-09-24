@@ -36,7 +36,7 @@ jobs:
           - rid: win-arm64
             target_cpu: arm64
             msvc_arch: amd64_arm64
-    runs-on: windows-2022
+    runs-on: windows-2025-vs2026
     env:
       SKIASHARP_VERSION: ${{ inputs.skiasharp_version }}
       ANGLE_BRANCH: ${{ inputs.angle_branch }}
@@ -58,7 +58,7 @@ jobs:
         shell: pwsh
         run: |
           "DEPOT_TOOLS_WIN_TOOLCHAIN=0" >> $env:GITHUB_ENV
-          "GYP_MSVS_VERSION=17.0" >> $env:GITHUB_ENV
+          "GYP_MSVS_VERSION=18.0" >> $env:GITHUB_ENV
           "GYP_MSVS_OVERRIDE_PATH=$($env:VSINSTALLDIR.TrimEnd('\', '/'))" >> $env:GITHUB_ENV
 
       - name: Install native build dependencies
@@ -73,7 +73,7 @@ jobs:
           RID: ${{ matrix.rid }}
           TARGET_CPU: ${{ matrix.target_cpu }}
           DEPOT_TOOLS_WIN_TOOLCHAIN: 0
-          GYP_MSVS_VERSION: 17.0
+          GYP_MSVS_VERSION: 18.0
         run: .\scripts\build-windows-static-graphics.ps1 angle-preflight
 
       - name: Build Windows static graphics libraries
@@ -82,7 +82,7 @@ jobs:
           RID: ${{ matrix.rid }}
           TARGET_CPU: ${{ matrix.target_cpu }}
           DEPOT_TOOLS_WIN_TOOLCHAIN: 0
-          GYP_MSVS_VERSION: 17.0
+          GYP_MSVS_VERSION: 18.0
         run: .\scripts\build-windows-static-graphics.ps1 all
 
       - name: Upload Windows static archives
