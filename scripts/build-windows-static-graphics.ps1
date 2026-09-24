@@ -19,6 +19,9 @@ $SkiaDepsRetries = if ($env:SKIA_DEPS_RETRIES) { [int]$env:SKIA_DEPS_RETRIES } e
 if (-not $env:DEPOT_TOOLS_WIN_TOOLCHAIN) {
     $env:DEPOT_TOOLS_WIN_TOOLCHAIN = "0"
 }
+if (-not $env:DEPOT_TOOLS_BOOTSTRAP_PYTHON3) {
+    $env:DEPOT_TOOLS_BOOTSTRAP_PYTHON3 = "0"
+}
 if ($env:DEPOT_TOOLS_WIN_TOOLCHAIN -eq "0") {
     if (-not $env:GYP_MSVS_VERSION) {
         $env:GYP_MSVS_VERSION = "17.0"
@@ -421,7 +424,6 @@ target_os = "win"
 target_cpu = "$TargetCpu"
 is_official_build = true
 is_static_skiasharp = true
-is_clang = true
 skia_enable_tools = false
 skia_enable_ganesh = true
 skia_enable_pdf = false
