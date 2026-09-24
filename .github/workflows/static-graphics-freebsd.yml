@@ -53,7 +53,7 @@ jobs:
             pkg update
             pkg install -y git python3 llvm ninja pkgconf fontconfig libX11 libXext libxcb curl
           run: |
-            scripts/build-static-graphics.sh all
+            scripts/build-freebsd-static-graphics.sh all
 
       - name: Normalize native build cache ownership
         run: sudo chown -R "$(id -u):$(id -g)" External/NativeStatic/.work
