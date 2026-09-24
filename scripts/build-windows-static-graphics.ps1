@@ -62,6 +62,13 @@ function Ensure-DepotTools {
         $null = git -C $depotDir pull --ff-only
     }
     $env:PATH = "$depotDir;$env:PATH"
+    $marker = Join-Path $depotDir "python3_bin_reldir.txt"
+    if (-not (Test-Path $marker)) {
+        & (Join-Path $depotDir "bootstrap\win_tools.bat")
+        if ($LASTEXITCODE -ne 0) {
+            throw "depot_tools Windows bootstrap failed."
+        }
+    }
 }
 
 function Copy-FirstExisting($Destination, [string[]]$Candidates) {
