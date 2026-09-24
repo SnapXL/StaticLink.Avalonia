@@ -9,6 +9,7 @@ OUTPUT_DIR="${OUTPUT_DIR:-$ROOT_DIR/External/NativeStatic/$RID}"
 SKIASHARP_VERSION="${SKIASHARP_VERSION:-4.154.0-preview.1}"
 BUILD_JOBS="${BUILD_JOBS:-$(sysctl -n hw.ncpu)}"
 SKIA_DEPS_RETRIES="${SKIA_DEPS_RETRIES:-3}"
+export DEPOT_TOOLS_BOOTSTRAP_PYTHON3=0
 
 require_cmd() {
   if ! command -v "$1" >/dev/null 2>&1; then
