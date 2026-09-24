@@ -21,7 +21,7 @@ jobs:
         include:
           - rid: freebsd-x64
             target_cpu: x64
-            vm_arch: x86-64
+            vm_arch: x86_64
             runner: ubuntu-24.04
           - rid: freebsd-arm64
             target_cpu: arm64
