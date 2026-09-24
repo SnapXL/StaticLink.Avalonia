@@ -71,6 +71,10 @@ ensure_tools() {
 
 sync_skiasharp() {
   src="$WORK_DIR/SkiaSharp-$SKIASHARP_VERSION"
+  if [ -d "$src" ] && [ ! -d "$src/.git" ]; then
+    echo "Removing non-git directory at $src before cloning" >&2
+    rm -rf "$src"
+  fi
   if [ ! -d "$src/.git" ]; then
     git clone --depth 1 --branch "release/$SKIASHARP_VERSION" https://github.com/mono/SkiaSharp.git "$src"
   else
