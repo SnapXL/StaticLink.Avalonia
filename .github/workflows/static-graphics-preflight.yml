@@ -67,17 +67,21 @@ jobs:
               output.write(f"skiasharp_version={skia_reference}\n")
               output.write(f"angle_branch={angle_branch}\n")
           PY
-      - name: Validate upstream refs and ANGLE patch
+      - name: Validate upstream refs
         env:
           SKIASHARP_VERSION: ${{ steps.versions.outputs.skiasharp_version }}
           ANGLE_BRANCH: ${{ steps.versions.outputs.angle_branch }}
         shell: bash
         run: |
           set -euo pipefail
-          git ls-remote --exit-code --heads https://github.com/mono/SkiaSharp.git "refs/heads/release/${SKIASHARP_VERSION}"
-          git clone --depth 1 --branch "chromium/${ANGLE_BRANCH}" https://github.com/google/angle.git /tmp/staticlink-angle
-          git -C /tmp/staticlink-angle apply --check "$GITHUB_WORKSPACE/External/NativeStatic/patches/angle-chromium-${ANGLE_BRANCH}.patch"
-
+          git ls-remote --exit-code --heads \
+            https://github.com/mono/SkiaSharp.git \
+            "refs/heads/release/${SKIASHARP_VERSION}" \
+            >/dev/null
+          git ls-remote --exit-code --heads \
+            https://github.com/google/angle.git \
+            "refs/heads/chromium/${ANGLE_BRANCH}" \
+            >/dev/null
       - name: Validate scripts
         shell: bash
         run: |

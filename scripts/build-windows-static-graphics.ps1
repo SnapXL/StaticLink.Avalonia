@@ -504,13 +504,43 @@ angle_static_library("libGLESv2_static") {
         Set-Content -Path $buildFile -Value $buildText -NoNewline -Encoding UTF8
     }
 
-    $patch = Join-Path $AnglePatchDir "angle-chromium-$AngleBranch.patch"
     $depsFile = Join-Path $Src "DEPS"
-    if ((Test-Path $patch) -and (Select-String -Path $depsFile -Pattern "'third_party/catapult'" -Quiet)) {
-        $null = git -C $Src apply $patch
-        if ($LASTEXITCODE -ne 0) {
-            throw "Failed to apply ANGLE patch: $patch"
+    $depsText = Get-Content -Path $depsFile -Raw
+    $depKeys = @(
+        "third_party/catapult",
+        "third_party/dawn",
+        "third_party/llvm/src",
+        "third_party/SwiftShader",
+        "third_party/VK-GL-CTS/src"
+    )
+    $alreadyAbsent = @()
+    foreach ($key in $depKeys) {
+        $escaped = [regex]::Escape($key)
+        $pattern = "(?m)^[ \t]*'$escaped'[ \t]*:[ \t]*\{[^{}]*?\},[ \t]*\r?\n(?:[ \t]*\r?\n)?"
+        $updated = [regex]::Replace($depsText, $pattern, "", 1)
+        if ($updated -eq $depsText) {
+            $alreadyAbsent += $key
         }
+        $depsText = $updated
+    }
+    Set-Content -Path $depsFile -Value $depsText -NoNewline -Encoding UTF8
+    if ($alreadyAbsent.Count -gt 0) {
+        Write-Warning ("DEPS entries already absent or not matched: " + ($alreadyAbsent -join ", "))
+    }
+
+    $intermFile = Join-Path $Src "src/compiler/translator/IntermNode.cpp"
+    $intermText = Get-Content -Path $intermFile -Raw
+    $newLine = 'constArray = new TConstantUnion[static_cast<size_t>(checkedArraySize.ValueOrDie())];'
+    $oldLine = 'constArray = new TConstantUnion[checkedArraySize.ValueOrDie()];'
+    if ($intermText.Contains($newLine)) {
+        Write-Host "Note: IntermNode.cpp already contains the static_cast"
+    }
+    elseif (-not $intermText.Contains($oldLine)) {
+        Write-Warning "IntermNode.cpp target line not found; skipping"
+    }
+    else {
+        $intermText = $intermText.Replace($oldLine, $newLine)
+        Set-Content -Path $intermFile -Value $intermText -NoNewline -Encoding UTF8
     }
 }
 
