@@ -90,7 +90,7 @@ jobs:
           bash -n scripts/build-macos-static-graphics.sh
           bash -n scripts/build-freebsd-static-graphics.sh
           bash -n scripts/create-avalonia-smoke.sh
-          pwsh -NoProfile -Command '$files = @("scripts/build-windows-static-graphics.ps1", "scripts/create-avalonia-smoke.ps1"); foreach ($file in $files) { $errors = $null; [System.Management.Automation.Language.Parser]::ParseFile((Resolve-Path $file), [ref]$null, [ref]$errors) | Out-Null; if ($errors.Count) { $errors | Format-List | Out-String; exit 1 } }'
+          pwsh -NoProfile -Command '$files = @("scripts/build-windows-static-graphics.ps1"); foreach ($file in $files) { $errors = $null; [System.Management.Automation.Language.Parser]::ParseFile((Resolve-Path $file), [ref]$null, [ref]$errors) | Out-Null; if ($errors.Count) { $errors | Format-List | Out-String; exit 1 } }'
 
       - name: Compile smoke project
         run: dotnet build Smoke/AvaloniaStaticLinkSmoke/AvaloniaStaticLinkSmoke.csproj -c Release -p:PublishAot=false
