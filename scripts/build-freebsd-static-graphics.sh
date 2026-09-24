@@ -195,6 +195,7 @@ build_skia() {
   cat >"$out_dir/args.gn" <<EOF_ARGS
 target_os = "$TARGET_OS"
 target_cpu = "$TARGET_CPU"
+arm_use_neon = false
 is_official_build = true
 is_static_skiasharp = true
 skia_enable_tools = false
