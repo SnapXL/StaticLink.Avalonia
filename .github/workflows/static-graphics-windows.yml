@@ -50,7 +50,13 @@ jobs:
           key: native-work-windows-${{ matrix.rid }}-${{ inputs.skiasharp_version }}-${{ inputs.angle_branch }}-${{ hashFiles('External/NativeStatic/patches/*.patch', 'scripts/build-windows-static-graphics.ps1') }}
 
       - name: Install Windows 11 SDK 28000
-        run: winget install Microsoft.WindowsSDK.10.0.28000
+        shell: pwsh
+        run: |
+          winget install --id Microsoft.WindowsSDK.10.0.28000 --silent --accept-package-agreements --accept-source-agreements
+          $sdkPath = "${env:ProgramFiles(x86)}\Windows Kits\10\Include\10.0.28000.0"
+          if (-not (Test-Path "$sdkPath\um")) {
+              throw "SDK 28000 headers still missing at $sdkPath\um"
+          }
 
       - name: Setup MSVC environment
         uses: TheMrMilchmann/setup-msvc-dev@v4
