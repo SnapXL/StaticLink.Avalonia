@@ -161,6 +161,48 @@ new = "  for args in list_of_arg_lists:\n    git_checkout_to_directory(*args)"
 if old in text:
     path.write_text(text.replace(old, new))
 PY
+
+  python3 - "$skia_dir" <<'PY'
+import pathlib
+import re
+import sys
+
+skia_dir = pathlib.Path(sys.argv[1])
+build_gn = skia_dir / "third_party/zlib/BUILD.gn"
+
+if not build_gn.exists():
+    print(f"Warning: {build_gn} not found; skipping zlib FreeBSD patch")
+    sys.exit(0)
+
+text = build_gn.read_text()
+
+# zlib won't shutup on FreeBSD ARM64
+pattern = re.compile(
+    r'use_arm_neon_optimizations\s*=\s*'
+    r'\(current_cpu\s*==\s*"arm"\s*\|\|\s*current_cpu\s*==\s*"arm64"\)\s*&&\s*'
+    r'!\(is_win\s*&&\s*!is_clang\)',
+    re.MULTILINE,
+)
+
+replacement = (
+    'use_arm_neon_optimizations = (current_cpu == "arm" || current_cpu == "arm64") &&\n'
+    '                             !(is_win && !is_clang) &&\n'
+    '                             target_os != "freebsd"'
+)
+
+new_text, count = pattern.subn(replacement, text, count=1)
+
+if count == 0:
+    if 'target_os != "freebsd"' in text:
+        print("zlib BUILD.gn already patched for FreeBSD")
+    else:
+        print("Warning: use_arm_neon_optimizations pattern not found; "
+              "zlib BUILD.gn layout may have changed")
+    sys.exit(0)
+
+build_gn.write_text(new_text)
+print("Patched zlib BUILD.gn to disable ARM NEON optimizations on FreeBSD")
+PY
 }
 
 sync_skia_deps() {
