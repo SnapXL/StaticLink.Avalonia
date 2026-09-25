@@ -88,10 +88,8 @@ ensure_depot_tools() {
   else
     git -C "$depot_dir" pull --ff-only
   fi
-  if is_musl_rid || [ "$TARGET_OS" = "freebsd" ]; then
-    initialize_depot_tools_system_python "$depot_dir"
-    patch_depot_tools_python_deps "$depot_dir"
-  fi
+  initialize_depot_tools_system_python "$depot_dir"
+  patch_depot_tools_python_deps "$depot_dir"
   export PATH="$python_bin_dir:$depot_dir:$PATH"
 }
 
@@ -241,7 +239,8 @@ extra_ldflags = [ "-static-libstdc++", "-static-libgcc" ]
 EOF_ARGS
 
   (cd "$skia_dir" && "$skia_dir/bin/gn" gen "$out_dir")
-  ninja -C "$out_dir" -j "$BUILD_JOBS" skia SkiaSharp HarfBuzzSharp
+  # Use system ninja explicitly to prevent depot_tools wrapper hangs
+  /usr/bin/ninja -C "$out_dir" -j "$BUILD_JOBS" skia SkiaSharp HarfBuzzSharp
 
   copy_first_existing "$OUTPUT_DIR/libskia.a" \
     "$out_dir/libskia.a" \
