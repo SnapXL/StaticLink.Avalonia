@@ -590,6 +590,7 @@ target_os = "win"
 target_cpu = "$TargetCpu"
 is_debug = false
 is_component_build = false
+treat_warnings_as_errors = false
 is_clang = true
 use_lld = false
 use_custom_libcxx = false
@@ -600,6 +601,7 @@ build_angle_deqp_tests = false
 angle_enable_swiftshader = false
 angle_enable_vulkan = false
 angle_enable_wgpu = false
+extra_cflags = [ "/D_SILENCE_CXX20_OLD_SHARED_PTR_ATOMIC_SUPPORT_DEPRECATION_WARNING" ]
 "@ | Set-Content -Path (Join-Path $outDir "args.gn") -Encoding ASCII
         gn gen $outDir
         ninja -C $outDir -j $BuildJobs libANGLE_static libGLESv2_static
