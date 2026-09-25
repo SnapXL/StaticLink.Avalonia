@@ -14,8 +14,8 @@
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
         <PackageReadmeFile>README.md</PackageReadmeFile>
         <RepositoryType>git</RepositoryType>
-        <RepositoryUrl>https://github.com/greepar/StaticLink.Avalonia</RepositoryUrl>
-        <PackageProjectUrl>https://github.com/greepar/StaticLink.Avalonia</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/SnapXL/StaticLink.Avalonia</RepositoryUrl>
+        <PackageProjectUrl>https://github.com/SnapXL/StaticLink.Avalonia</PackageProjectUrl>
     </PropertyGroup>
 
     <ItemGroup>
