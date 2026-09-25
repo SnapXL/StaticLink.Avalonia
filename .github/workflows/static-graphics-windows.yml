@@ -50,19 +50,7 @@ jobs:
           key: native-work-windows-${{ matrix.rid }}-${{ inputs.skiasharp_version }}-${{ inputs.angle_branch }}-${{ hashFiles('External/NativeStatic/patches/*.patch', 'scripts/build-windows-static-graphics.ps1') }}
 
       - name: Install Windows 11 SDK 28000
-        shell: pwsh
-        run: |
-          $vsInstaller = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vs_installer.exe"
-          if (-not (Test-Path $vsInstaller)) {
-              throw "Visual Studio Installer not found at $vsInstaller"
-          }
-          & $vsInstaller modify `
-              --installPath "$env:VSINSTALLDIR" `
-              --add Microsoft.VisualStudio.Component.Windows11SDK.28000 `
-              --quiet --norestart --wait
-          if ($LASTEXITCODE -ne 0) {
-              throw "Failed to install Windows 11 SDK 28000 (exit code $LASTEXITCODE)"
-          }
+        run: winget install Microsoft.WindowsSDK.10.0.28000
 
       - name: Setup MSVC environment
         uses: TheMrMilchmann/setup-msvc-dev@v4
