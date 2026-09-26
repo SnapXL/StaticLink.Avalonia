@@ -404,8 +404,10 @@ function Prepare-SkiaGitSyncDeps($SkiaDir) {
 
         if (-not [string]::IsNullOrEmpty($HarfbuzzCommit)) {
             $harfbuzzPattern = '(["\x27]third_party/externals/harfbuzz["\x27]\s*:\s*["\x27][^@]+@)[^"\x27]+(["\x27])'
-            $replacement = '$1' + $HarfbuzzCommit + '$2'
-            $deps = [regex]::Replace($deps, $harfbuzzPattern, $replacement)
+            $deps = [regex]::Replace($deps, $harfbuzzPattern, {
+                param($match)
+                return $match.Groups[1].Value + $HarfbuzzCommit + $match.Groups[2].Value
+            })
         }
 
         $deps = [regex]::Replace($deps, 'https://(skia|chromium)\.googlesource\.com/external/github\.com/([^@]+)\.git', 'https://github.com/$2.git')
