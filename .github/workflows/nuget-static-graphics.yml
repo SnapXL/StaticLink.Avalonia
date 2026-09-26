@@ -70,7 +70,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: "10.0.302"
+          dotnet-version: "10.0.x"
 
       - name: Download static archives
         uses: actions/download-artifact@v4
@@ -168,7 +168,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: "10.0.302"
+          dotnet-version: "10.0.x"
 
       - name: Download NuGet package
         uses: actions/download-artifact@v4
@@ -417,7 +417,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: "10.0.302"
+          dotnet-version: "10.0.x"
 
       - name: Download NuGet package
         uses: actions/download-artifact@v4
@@ -634,7 +634,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: "10.0.302"
+          dotnet-version: "10.0.x"
 
       - name: Download NuGet package
         uses: actions/download-artifact@v4

@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <TargetFramework>net8.0</TargetFramework>
+        <TargetFramework>netstandard2.0</TargetFramework>
         <IsPackable>true</IsPackable>
         <NoBuild>true</NoBuild>
         <IncludeBuildOutput>false</IncludeBuildOutput>
@@ -24,7 +24,7 @@
 
     <ItemGroup>
         <None Include="README.md" Pack="true" PackagePath="" />
-        <None Include="lib/net8.0/_._" Pack="true" PackagePath="lib/net8.0/_._" />
+        <None Include="lib/netstandard2.0/_._" Pack="true" PackagePath="lib/netstandard2.0/_._" />
         <None Include="buildTransitive/StaticLink.Avalonia.props" Pack="true" PackagePath="buildTransitive/$(PackageId).props" />
         <None Include="buildTransitive/StaticLink.Avalonia.targets" Pack="true" PackagePath="buildTransitive/$(PackageId).targets" />
         <None Include="../../External/NativeStatic/win-x64/native/**/*" Pack="true" PackagePath="static/win-x64/native/%(RecursiveDir)%(Filename)%(Extension)" />
