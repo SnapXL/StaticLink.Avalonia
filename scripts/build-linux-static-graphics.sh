@@ -233,9 +233,13 @@ extra_cflags = [
   "-DSKIA_C_DLL",
   "-DHAVE_SYSCALL_GETRANDOM",
   "-DXML_DEV_URANDOM",
+  "-stdlib=libc++"
 ]
 extra_cflags_cc = [ "-frtti" ]
-extra_ldflags = [ "-static-libstdc++", "-static-libgcc" ]
+extra_ldflags = [
+  "-stdlib=libc++", 
+  "-lc++abi"
+]
 EOF_ARGS
 
   (cd "$skia_dir" && "$skia_dir/bin/gn" gen "$out_dir")
