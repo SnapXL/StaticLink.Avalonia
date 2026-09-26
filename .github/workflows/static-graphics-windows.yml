@@ -42,7 +42,15 @@ jobs:
       ANGLE_BRANCH: ${{ inputs.angle_branch }}
     steps:
       - uses: actions/checkout@v4
-
+      - name: Exclude Workspace from Windows Defender
+        shell: powershell
+        run: |
+          try {
+              Add-MpPreference -ExclusionPath "$env:GITHUB_WORKSPACE" -ErrorAction Stop
+              Write-Host "Successfully added workspace to Defender exclusions."
+          } catch {
+              Write-Host "Note: Defender exclusion skipped or restricted on this runner type: $_"
+          }
       - name: Restore native build cache
         uses: actions/cache@v4
         with:
