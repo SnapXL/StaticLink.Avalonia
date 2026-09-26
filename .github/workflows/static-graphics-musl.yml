@@ -86,7 +86,7 @@ jobs:
             fontconfig-dev \
             glib-dev \
             linux-headers \
-            libstdc++-dev \ 
+            libstdc++-dev \
             freetype-dev
 
           ARCH_NAME=$(sudo cat "$SYSROOT/etc/apk/arch")
