@@ -32,8 +32,10 @@
         <None Include="../../External/NativeStatic/win-arm64/native/**/*" Pack="true" PackagePath="static/win-arm64/native/%(RecursiveDir)%(Filename)%(Extension)" />
         <None Include="../../External/NativeStatic/linux-x64/native/**/*" Pack="true" PackagePath="static/linux-x64/native/%(RecursiveDir)%(Filename)%(Extension)" />
         <None Include="../../External/NativeStatic/linux-arm64/native/**/*" Pack="true" PackagePath="static/linux-arm64/native/%(RecursiveDir)%(Filename)%(Extension)" />
+        <None Include="../../External/NativeStatic/linux-arm/native/**/*" Pack="true" PackagePath="static/linux-arm/native/%(RecursiveDir)%(Filename)%(Extension)" />
         <None Include="../../External/NativeStatic/linux-musl-x64/native/**/*" Pack="true" PackagePath="static/linux-musl-x64/native/%(RecursiveDir)%(Filename)%(Extension)" />
         <None Include="../../External/NativeStatic/linux-musl-arm64/native/**/*" Pack="true" PackagePath="static/linux-musl-arm64/native/%(RecursiveDir)%(Filename)%(Extension)" />
+        <None Include="../../External/NativeStatic/linux-musl-arm/native/**/*" Pack="true" PackagePath="static/linux-musl-arm/native/%(RecursiveDir)%(Filename)%(Extension)" />
         <None Include="../../External/NativeStatic/osx-x64/native/**/*" Exclude="../../External/NativeStatic/osx-x64/native/libAvaloniaNative.a;../../External/NativeStatic/osx-x64/native/macos_font_preinit.o" Pack="true" PackagePath="static/osx-x64/native/%(RecursiveDir)%(Filename)%(Extension)" />
         <None Include="../../External/NativeStatic/osx-arm64/native/**/*" Exclude="../../External/NativeStatic/osx-arm64/native/libAvaloniaNative.a;../../External/NativeStatic/osx-arm64/native/macos_font_preinit.o" Pack="true" PackagePath="static/osx-arm64/native/%(RecursiveDir)%(Filename)%(Extension)" />
         <None Include="../../External/NativeStatic/freebsd-x64/native/**/*" Pack="true" PackagePath="static/freebsd-x64/native/%(RecursiveDir)%(Filename)%(Extension)" />

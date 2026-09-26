@@ -28,9 +28,15 @@ jobs:
         include:
           - rid: linux-musl-x64
             target_cpu: x64
+            alpine_arch: x86_64
             runner: ubuntu-24.04
           - rid: linux-musl-arm64
             target_cpu: arm64
+            alpine_arch: aarch64
+            runner: ubuntu-24.04-arm
+          - rid: linux-musl-arm
+            target_cpu: arm
+            alpine_arch: armv7
             runner: ubuntu-24.04-arm
     runs-on: ${{ matrix.runner }}
     env:
@@ -45,36 +51,46 @@ jobs:
           path: External/NativeStatic/.work
           key: native-work-musl-${{ matrix.rid }}-${{ inputs.skiasharp_version }}-${{ hashFiles('External/NativeStatic/patches/*.patch', 'scripts/build-linux-static-graphics.sh') }}
 
+      - uses: bgilbert/setup-alpine@armv7
+        with:
+          arch: ${{ matrix.alpine_arch }}
+          branch: v3.21
+          packages: >
+            ca-certificates
+            clang
+            compiler-rt
+            curl
+            fontconfig-dev
+            g++
+            git
+            glib-dev
+            gn
+            libx11-dev
+            libxcb-dev
+            libxext-dev
+            linux-headers
+            lld
+            llvm
+            mesa-dev
+            ninja
+            patch
+            pciutils-dev
+            perl
+            pkgconf
+            python3
+            tar
+            xz
+
       - name: Build Linux musl static graphics libraries
-        run: |
-          docker run --rm \
-            -v "$PWD:/workspace" \
-            -w /workspace \
-            -e RID="${{ matrix.rid }}" \
-            -e TARGET_CPU="${{ matrix.target_cpu }}" \
-            -e OUTPUT_DIR="/workspace/External/NativeStatic/${{ matrix.rid }}/native" \
-            -e SKIASHARP_VERSION="$SKIASHARP_VERSION" \
-            -e LLVM_AR=llvm-ar \
-            -e DEPOT_TOOLS_BOOTSTRAP_PYTHON3=0 \
-            -e VPYTHON_BYPASS="manually managed python not supported by chrome operations" \
-            "$DOTNET_ALPINE_IMAGE" \
-            sh -lc '
-              set -e
-              apk add --no-cache bash ca-certificates git python3 py3-httplib2 py3-pysocks py3-six clang compiler-rt lld llvm g++ ninja pkgconf fontconfig-dev glib-dev mesa-dev libx11-dev libxcb-dev libxext-dev pciutils-dev linux-headers perl curl tar xz patch gcompat libc6-compat
-              git config --global --add safe.directory "*"
-              python3 - <<'"'"'PY'"'"'
-          import pathlib
-          import httplib2
-
-          path = pathlib.Path(httplib2.__file__).with_name("socks.py")
-          if not path.exists():
-            path.write_text("from socks import *\n")
-          PY
-              bash scripts/build-linux-static-graphics.sh all
-            '
-
-      - name: Normalize native build cache ownership
-        run: sudo chown -R "$(id -u):$(id -g)" External/NativeStatic/.work
+        shell: alpine.sh {0}
+        env:
+          RID: ${{ matrix.rid }}
+          TARGET_CPU: ${{ matrix.target_cpu }}
+          OUTPUT_DIR: External/NativeStatic/${{ matrix.rid }}/native
+          LLVM_AR: llvm-ar
+          DEPOT_TOOLS_BOOTSTRAP_PYTHON3: 0
+          VPYTHON_BYPASS: "manually managed python not supported by chrome operations"
+        run: scripts/build-linux-static-graphics.sh all
 
       - name: Upload Linux musl static archives
         uses: actions/upload-artifact@v4

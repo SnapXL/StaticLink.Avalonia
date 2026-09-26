@@ -27,6 +27,10 @@ jobs:
             target_cpu: arm64
             ubuntu_arch: arm64
             runner: ubuntu-26.04-arm
+          - rid: linux-arm
+            target_cpu: arm
+            ubuntu_arch: armhf
+            runner: ubuntu-26.04-arm
     runs-on: ${{ matrix.runner }}
     env:
       SKIASHARP_VERSION: ${{ inputs.skiasharp_version }}
@@ -41,10 +45,10 @@ jobs:
 
       - name: Setup Ubuntu 18.04 Sysroot
         run: |
-          if [ "${{ matrix.ubuntu_arch }}" = "arm64" ]; then
-            MIRROR="http://ports.ubuntu.com/ubuntu-ports"
-          else
+          if [ "${{ matrix.ubuntu_arch }}" = "amd64" ]; then
             MIRROR="http://archive.ubuntu.com/ubuntu"
+          else
+            MIRROR="http://ports.ubuntu.com/ubuntu-ports"
           fi
           sudo debootstrap \
             --arch=${{ matrix.ubuntu_arch }} \
@@ -62,11 +66,7 @@ jobs:
 
       - name: Setup Clang/Clang++ Wrappers for Sysroot
         run: |
-          if [ "${{ matrix.target_cpu }}" = "x64" ]; then
-            TRIPLE="x86_64-linux-gnu"
-          else
-            TRIPLE="aarch64-linux-gnu"
-          fi
+          TRIPLE=$(sudo chroot /opt/sysroot-ubuntu1804 dpkg-architecture -qDEB_HOST_GNU_TYPE)
           CXX_INCLUDE_DIR="/opt/sysroot-ubuntu1804/usr/include/$TRIPLE/c++/10"
           SYSROOT="/opt/sysroot-ubuntu1804"
 

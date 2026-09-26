@@ -24,7 +24,7 @@ fi
 export TARGET_CPU
 TARGET_OS="linux"
 if [ -z "${RID:-}" ]; then
-  if [ -f /etc/alpine-release ]; then
+  if (command -v cc >/dev/null 2>&1 && cc -dumpmachine 2>/dev/null | grep -q musl) || [ -f /etc/alpine-release ]; then
     RID="linux-musl-$TARGET_CPU"
   else
     RID="$TARGET_OS-$TARGET_CPU"
@@ -64,20 +64,14 @@ require_cmd() {
   fi
 }
 
-is_musl_rid() {
-  case "$RID" in
-    *-musl-*) return 0 ;;
-    *) return 1 ;;
-  esac
-}
-
 ensure_tools() {
   require_cmd git
   require_cmd python3
   require_cmd clang
   require_cmd clang++
-  require_cmd ar
+  require_cmd llvm-ar
   require_cmd ninja
+  require_cmd gn
   require_cmd pkg-config
 }
 
@@ -250,21 +244,19 @@ PY
 
 sync_skia_deps() {
   skia_dir="$1/externals/skia"
-  if [ ! -x "$skia_dir/bin/gn" ]; then
-    prepare_skia_git_sync_deps "$skia_dir"
-    attempt=1
-    while [ "$attempt" -le "$SKIA_DEPS_RETRIES" ]; do
-      if python3 "$skia_dir/tools/git-sync-deps"; then
-        return 0
-      fi
-      if [ "$attempt" -eq "$SKIA_DEPS_RETRIES" ]; then
-        return 1
-      fi
-      echo "git-sync-deps failed; retrying ($attempt/$SKIA_DEPS_RETRIES)..." >&2
-      sleep 10
-      attempt=$((attempt + 1))
-    done
-  fi
+  prepare_skia_git_sync_deps "$skia_dir"
+  attempt=1
+  while [ "$attempt" -le "$SKIA_DEPS_RETRIES" ]; do
+    if python3 "$skia_dir/tools/git-sync-deps"; then
+      return 0
+    fi
+    if [ "$attempt" -eq "$SKIA_DEPS_RETRIES" ]; then
+      return 1
+    fi
+    echo "git-sync-deps failed; retrying ($attempt/$SKIA_DEPS_RETRIES)..." >&2
+    sleep 10
+    attempt=$((attempt + 1))
+  done
 }
 
 build_skia() {
@@ -313,7 +305,7 @@ extra_cflags_cc = [ "-frtti", "-Wno-psabi" ]
 extra_ldflags = []
 EOF_ARGS
 
-  (cd "$skia_dir" && "$skia_dir/bin/gn" gen "$out_dir")
+  (cd "$skia_dir" && /usr/bin/gn gen "$out_dir")
   # Use system ninja explicitly to prevent depot_tools wrapper hangs
   /usr/bin/ninja -C "$out_dir" -j "$BUILD_JOBS" skia SkiaSharp HarfBuzzSharp
 
