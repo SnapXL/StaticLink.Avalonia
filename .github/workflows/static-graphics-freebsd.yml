@@ -29,7 +29,7 @@ jobs:
             freebsd_arch: aarch64
             freebsd_dir: arm64/aarch64
             target_triple: aarch64-unknown-freebsd14
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     env:
       SKIASHARP_VERSION: ${{ inputs.skiasharp_version }}
       RID: ${{ matrix.rid }}
