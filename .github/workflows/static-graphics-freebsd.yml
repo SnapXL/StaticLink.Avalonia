@@ -21,18 +21,20 @@ jobs:
         include:
           - rid: freebsd-x64
             target_cpu: x64
-            vm_arch: x86_64
-            runner: ubuntu-24.04
+            freebsd_arch: x86_64
+            freebsd_dir: amd64/amd64
+            target_triple: x86_64-unknown-freebsd14
           - rid: freebsd-arm64
             target_cpu: arm64
-            vm_arch: aarch64
-            runner: ubuntu-24.04
-    runs-on: ${{ matrix.runner }}
+            freebsd_arch: aarch64
+            freebsd_dir: arm64/aarch64
+            target_triple: aarch64-unknown-freebsd14
+    runs-on: ubuntu-24.04
     env:
       SKIASHARP_VERSION: ${{ inputs.skiasharp_version }}
       RID: ${{ matrix.rid }}
       TARGET_CPU: ${{ matrix.target_cpu }}
-      LLVM_AR: llvm-ar
+      FREEBSD_TRIPLE: ${{ matrix.target_triple }}
     steps:
       - uses: actions/checkout@v4
 
@@ -42,21 +44,52 @@ jobs:
           path: External/NativeStatic/.work
           key: native-work-freebsd-${{ matrix.rid }}-${{ inputs.skiasharp_version }}-${{ hashFiles('External/NativeStatic/patches/*.patch', 'scripts/build-freebsd-static-graphics.sh') }}
 
-      - name: Build FreeBSD static graphics libraries inside FreeBSD VM
-        uses: vmactions/freebsd-vm@v1
-        with:
-          release: "14"
-          arch: ${{ matrix.vm_arch }}
-          envs: SKIASHARP_VERSION RID TARGET_CPU LLVM_AR
-          usesh: true
-          prepare: |
-            pkg update
-            pkg install -y git python3 llvm ninja pkgconf fontconfig libX11 libXext libxcb curl gn
-          run: |
-            scripts/build-freebsd-static-graphics.sh all
+      - name: Install cross-compilation host tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang lld llvm ninja-build curl xz-utils pkg-config python3 gn libfontconfig1-dev
 
-      - name: Normalize native build cache ownership
-        run: sudo chown -R "$(id -u):$(id -g)" External/NativeStatic/.work
+      - name: Setup FreeBSD Sysroot
+        run: |
+          SYSROOT="/opt/freebsd-sysroot-${{ matrix.rid }}"
+          sudo mkdir -p "$SYSROOT"
+          
+          RELEASE="14.5"
+          DIR="${{ matrix.freebsd_dir }}"
+          
+          # Download FreeBSD base system
+          curl -fSL "https://download.freebsd.org/releases/${DIR}/${RELEASE}-RELEASE/base.txz" -o /tmp/base.txz || \
+          curl -fSL "https://archive.freebsd.org/old-releases/${DIR}/${RELEASE}-RELEASE/base.txz" -o /tmp/base.txz
+          
+          sudo tar -xJf /tmp/base.txz -C "$SYSROOT" \
+            ./usr/include \
+            ./usr/lib \
+            ./lib
+          rm /tmp/base.txz
+
+          sudo mkdir -p /usr/local/bin
+          
+          sudo tee /usr/local/bin/clang << EOF
+          #!/bin/sh
+          exec /usr/bin/clang --target=$FREEBSD_TRIPLE --sysroot="$SYSROOT" -fuse-ld=lld -Wno-unused-command-line-argument "\$@"
+          EOF
+          sudo chmod +x /usr/local/bin/clang
+
+          sudo tee /usr/local/bin/clang++ << EOF
+          #!/bin/sh
+          exec /usr/bin/clang++ --target=$FREEBSD_TRIPLE --sysroot="$SYSROOT" -fuse-ld=lld -Wno-unused-command-line-argument "\$@"
+          EOF
+          sudo chmod +x /usr/local/bin/clang++
+          sudo ln -s /usr/include/fontconfig /usr/local/include/fontconfig
+      - name: Build FreeBSD static graphics libraries
+        env:
+          CC: clang
+          CXX: clang++
+          AR: llvm-ar
+          LD: ld.lld
+          TARGET_OS: freebsd
+        run: |
+          scripts/build-freebsd-static-graphics.sh all
 
       - name: Upload FreeBSD static archives
         uses: actions/upload-artifact@v4

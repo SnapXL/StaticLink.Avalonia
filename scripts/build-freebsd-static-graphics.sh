@@ -235,8 +235,17 @@ build_skia() {
   rm -rf "$ISOLATED_INCLUDE_DIR"
   mkdir -p "$ISOLATED_INCLUDE_DIR"
   
-  cp -R /usr/local/include/fontconfig "$ISOLATED_INCLUDE_DIR/"
-  cp -R /usr/local/include/freetype2/* "$ISOLATED_INCLUDE_DIR/"
+  if [ -d /usr/local/include/fontconfig ]; then
+    cp -R /usr/local/include/fontconfig "$ISOLATED_INCLUDE_DIR/"
+  else
+    echo "Warning: /usr/local/include/fontconfig not found on host, skipping." >&2
+  fi
+  
+  if [ -d /usr/local/include/freetype2 ]; then
+    cp -R /usr/local/include/freetype2/* "$ISOLATED_INCLUDE_DIR/"
+  else
+    echo "Warning: /usr/local/include/freetype2 not found on host, skipping." >&2
+  fi
   
   cat >"$out_dir/args.gn" <<EOF_ARGS
 target_os = "$TARGET_OS"
