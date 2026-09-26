@@ -417,21 +417,6 @@ function Prepare-SkiaGitSyncDeps($SkiaDir) {
         Set-Content -Path $depsPath -Value $deps -NoNewline -Encoding utf8
         Write-Host "Successfully patched and cleaned DEPS file."
     }
-
-    $syncDeps = Join-Path $SkiaDir "tools\git-sync-deps"
-    if (Test-Path $syncDeps) {
-        $text = Get-Content -Path $syncDeps -Raw -Encoding utf8
-        if ($text -match "multithread\(") {
-            $replacement = 'for args in $1:' + "`n" + '    git_checkout_to_directory(*args)'
-            $text = [regex]::Replace(
-                    $text,
-                    'multithread\s*\(\s*git_checkout_to_directory\s*,\s*([^)]+)\s*\)',
-                    $replacement
-            )
-            Set-Content -Path $syncDeps -Value $text -NoNewline -Encoding utf8
-            Write-Host "Successfully patched git-sync-deps."
-        }
-    }
 }
 
 function Invoke-SkiaGitSyncDeps($SkiaDir) {

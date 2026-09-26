@@ -225,20 +225,6 @@ if deps_path.exists():
     print("Successfully patched and cleaned DEPS file.")
 else:
     print(f"Warning: DEPS file not found at {deps_path}", file=sys.stderr)
-
-if sync_deps_path.exists():
-    text = sync_deps_path.read_text(encoding='utf-8', errors='ignore')
-    # Patch git-sync-deps multithreading safely using regex
-    if "multithread(" in text:
-        text = re.sub(
-            r'multithread\s*\(\s*git_checkout_to_directory\s*,\s*([^)]+)\s*\)',
-            r'for args in \1:\n    git_checkout_to_directory(*args)',
-            text
-        )
-    sync_deps_path.write_text(text, encoding='utf-8')
-    print("Successfully patched git-sync-deps.")
-else:
-    print(f"Warning: git-sync-deps not found at {sync_deps_path}", file=sys.stderr)
 PY
 }
 
