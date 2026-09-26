@@ -397,7 +397,7 @@ function Prepare-SkiaGitSyncDeps($SkiaDir) {
             "vulkan-headers"
         )
 
-        foreach ($dep in$unusedDeps) {
+        foreach ($dep in $unusedDeps) {
             $pattern = '^\s*["\x27]third_party/externals/' + [regex]::Escape($dep) + '["\x27]\s*:\s*[^,\n]+,\s*\n'
             $deps = [regex]::Replace($deps,$pattern, '', [System.Text.RegularExpressions.RegexOptions]::Multiline)
         }
