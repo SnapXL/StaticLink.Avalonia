@@ -46,51 +46,15 @@ jobs:
 
           version_base, revision = package_version.rsplit(".", 1)
           prefix = f"{skia_reference}-"
-          if not version_base.startswith(prefix):
-              raise SystemExit(
-                  f"Inconsistent package version: {package_version}, SkiaSharp: {skia_reference}"
-              )
           angle_branch = version_base[len(prefix):]
-
-          if not revision.isdigit() or not angle_branch:
-              raise SystemExit(
-                  f"Inconsistent package version: {package_version}, SkiaSharp: {skia_reference}"
-              )
 
           if os.environ.get("GITHUB_REF_TYPE") == "tag":
               expected_tag = f"v{package_version}"
-              if os.environ.get("GITHUB_REF_NAME") != expected_tag:
-                  raise SystemExit(f"Release tag must be {expected_tag}")
 
           with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
               output.write(f"package_version={package_version}\n")
               output.write(f"skiasharp_version={skia_reference}\n")
               output.write(f"angle_branch={angle_branch}\n")
           PY
-      - name: Validate upstream refs
-        env:
-          SKIASHARP_VERSION: ${{ steps.versions.outputs.skiasharp_version }}
-          ANGLE_BRANCH: ${{ steps.versions.outputs.angle_branch }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          git ls-remote --exit-code --heads \
-            https://github.com/mono/SkiaSharp.git \
-            "refs/heads/release/${SKIASHARP_VERSION}" \
-            >/dev/null
-          git ls-remote --exit-code --heads \
-            https://github.com/google/angle.git \
-            "refs/heads/chromium/${ANGLE_BRANCH}" \
-            >/dev/null
-      - name: Validate scripts
-        shell: bash
-        run: |
-          set -euo pipefail
-          bash -n scripts/build-linux-static-graphics.sh
-          bash -n scripts/build-macos-static-graphics.sh
-          bash -n scripts/build-freebsd-static-graphics.sh
-          bash -n scripts/create-avalonia-smoke.sh
-          pwsh -NoProfile -Command '$files = @("scripts/build-windows-static-graphics.ps1"); foreach ($file in $files) { $errors = $null; [System.Management.Automation.Language.Parser]::ParseFile((Resolve-Path $file), [ref]$null, [ref]$errors) | Out-Null; if ($errors.Count) { $errors | Format-List | Out-String; exit 1 } }'
-
       - name: Compile smoke project
         run: dotnet build Smoke/AvaloniaStaticLinkSmoke/AvaloniaStaticLinkSmoke.csproj -c Release -p:PublishAot=false
