@@ -30,6 +30,7 @@ LLVM_AR="${LLVM_AR:-$(command -v llvm-ar 2>/dev/null || echo ar)}"
 SKIA_DEPS_RETRIES="${SKIA_DEPS_RETRIES:-3}"
 
 export PYTHONUNBUFFERED=1
+HARFBUZZ_COMMIT="${HARFBUZZ_COMMIT:-863d3f7787c6df18d20e4535c5906bf3eb803bd5}"
 
 usage() {
   cat <<'USAGE'
