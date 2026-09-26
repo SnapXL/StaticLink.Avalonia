@@ -41,13 +41,18 @@ jobs:
 
       - name: Setup Ubuntu 18.04 Sysroot
         run: |
+          if [ "${{ matrix.ubuntu_arch }}" = "arm64" ]; then
+            MIRROR="http://ports.ubuntu.com/ubuntu-ports"
+          else
+            MIRROR="http://archive.ubuntu.com/ubuntu"
+          fi
           sudo debootstrap \
             --arch=${{ matrix.ubuntu_arch }} \
             --components=main,universe \
             --include=libc6-dev,libfontconfig1-dev,libfreetype6-dev,zlib1g-dev,gnupg \
             bionic \
             /opt/sysroot-ubuntu1804 \
-            http://archive.ubuntu.com/ubuntu/
+            $MIRROR
 
           sudo chroot /opt/sysroot-ubuntu1804 apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 2C277A0A352154E5 1E9377A2BA9EF27F
           echo "deb http://ppa.launchpad.net/ubuntu-toolchain-r/test/ubuntu bionic main" | sudo tee -a /opt/sysroot-ubuntu1804/etc/apt/sources.list
