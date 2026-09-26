@@ -17,7 +17,7 @@ on:
         type: string
       dotnet_alpine_image:
         required: true
-        default: mcr.microsoft.com/dotnet/sdk:10.0-alpine3.24
+        default: mcr.microsoft.com/dotnet/sdk:10.0-alpine3.22
         type: string
 
 jobs:
