@@ -15,10 +15,6 @@ on:
         required: true
         default: "4.154.0-preview.1"
         type: string
-      dotnet_alpine_image:
-        required: true
-        default: mcr.microsoft.com/dotnet/sdk:10.0-alpine3.22
-        type: string
 
 jobs:
   build:
@@ -42,6 +38,8 @@ jobs:
     env:
       SKIASHARP_VERSION: ${{ inputs.skiasharp_version }}
       DOTNET_ALPINE_IMAGE: ${{ inputs.dotnet_alpine_image }}
+      RID: ${{ matrix.rid }}
+      TARGET_CPU: ${{ matrix.target_cpu }}
     steps:
       - uses: actions/checkout@v4
 
@@ -51,38 +49,67 @@ jobs:
           path: External/NativeStatic/.work
           key: native-work-musl-${{ matrix.rid }}-${{ inputs.skiasharp_version }}-${{ hashFiles('External/NativeStatic/patches/*.patch', 'scripts/build-linux-static-graphics.sh') }}
 
-      - uses: bgilbert/setup-alpine@armv7
-        with:
-          arch: ${{ matrix.alpine_arch }}
-          branch: v3.21
-          packages: >
-            ca-certificates
-            clang
-            compiler-rt
-            curl
-            fontconfig-dev
-            g++
-            git
-            glib-dev
-            gn
-            libx11-dev
-            libxcb-dev
-            libxext-dev
-            linux-headers
-            lld
-            llvm
-            mesa-dev
-            ninja
-            patch
-            pciutils-dev
-            perl
-            pkgconf
-            python3
-            tar
-            xz
+      - name: Install cross-compilation host tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang lld llvm ninja-build curl xz-utils pkg-config python3 gn libfontconfig1-dev
+
+      - name: Set up QEMU
+        if: matrix.alpine_arch != 'x86_64'
+        uses: docker/setup-qemu-action@v4
+
+      - name: Setup Alpine Linux 3.21 Sysroot
+        run: |
+          SYSROOT="/opt/alpine-sysroot-${{ matrix.rid }}"
+          sudo mkdir -p "$SYSROOT"
+          
+          ALT_ARCH="${{ matrix.alpine_arch }}"
+          ALPINE_VERSION="3.21.8"
+          TARBALL="alpine-minirootfs-$ALPINE_VERSION-$ALT_ARCH.tar.gz"
+          URL="https://dl-cdn.alpinelinux.org/alpine/v3.21/releases/$ALT_ARCH/$TARBALL"
+          
+          curl -fSL "$URL" -o /tmp/$TARBALL
+          sudo tar -xzf /tmp/$TARBALL -C "$SYSROOT"
+          rm /tmp/$TARBALL
+
+          sudo tee "$SYSROOT/etc/apk/repositories" << 'EOF'
+          https://dl-cdn.alpinelinux.org/alpine/v3.21/main
+          https://dl-cdn.alpinelinux.org/alpine/v3.21/community
+          EOF
+
+          sudo cp /etc/resolv.conf "$SYSROOT/etc/resolv.conf"
+
+          sudo chroot "$SYSROOT" apk update
+          sudo chroot "$SYSROOT" apk add --no-cache \
+            ca-certificates \
+            musl-dev \
+            fontconfig-dev \
+            glib-dev \
+            libx11-dev \
+            libxcb-dev \
+            libxext-dev \
+            linux-headers \
+            libstdc++-dev \ 
+            freetype-dev
+
+          ARCH_NAME=$(sudo cat "$SYSROOT/etc/apk/arch")
+          TRIPLE="${ARCH_NAME}-alpine-linux-musl"
+
+          sudo mkdir -p /usr/local/bin
+          
+          sudo tee /usr/local/bin/clang << EOF
+          #!/bin/sh
+          exec /usr/bin/clang --target=$TRIPLE --sysroot="$SYSROOT" "\$@"
+          EOF
+          sudo chmod +x /usr/local/bin/clang
+
+          sudo tee /usr/local/bin/clang++ << EOF
+          #!/bin/sh
+          exec /usr/bin/clang++ --target=$TRIPLE --sysroot="$SYSROOT" "\$@"
+          EOF
+          sudo chmod +x /usr/local/bin/clang++
 
       - name: Build Linux musl static graphics libraries
-        shell: alpine.sh {0}
         env:
           RID: ${{ matrix.rid }}
           TARGET_CPU: ${{ matrix.target_cpu }}
