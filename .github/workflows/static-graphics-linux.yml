@@ -37,7 +37,6 @@ jobs:
       - name: Install native build dependencies
         run: |
           sed -i 's/enabled=0/enabled=1/g' /etc/yum.repos.d/almalinux-powertools.repo || true
-          microdnf install -y epel-release
           microdnf install -y git clang lld llvm gcc-c++ ninja-build pkgconfig fontconfig-devel glib2-devel mesa-libGL-devel pciutils-devel libX11-devel libxcb-devel libXext-devel tar
       - uses: actions/checkout@v4
 
