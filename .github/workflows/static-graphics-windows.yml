@@ -101,8 +101,10 @@ jobs:
           GYP_MSVS_VERSION: 18.0
         run: .\scripts\build-windows-static-graphics.ps1 angle-preflight
 
-      - name: Setup MSVC environment
+      - name: Wait for WinSDK
         wait: install-sdk
+
+      - name: Setup MSVC environment
         uses: TheMrMilchmann/setup-msvc-dev@v4
         with:
           arch: ${{ matrix.msvc_arch }}
