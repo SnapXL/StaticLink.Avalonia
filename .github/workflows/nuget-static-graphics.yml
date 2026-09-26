@@ -18,7 +18,7 @@ on:
       - "staticlink-avalonia-v*"
 
 env:
-  DOTNET_ALPINE_IMAGE: mcr.microsoft.com/dotnet/sdk:10.0-alpine3.23
+  DOTNET_ALPINE_IMAGE: mcr.microsoft.com/dotnet/sdk:10.0-alpine3.22
 
 jobs:
   preflight:
@@ -35,7 +35,7 @@ jobs:
     uses: ./.github/workflows/static-graphics-musl.yml
     with:
       skiasharp_version: ${{ needs.preflight.outputs.skiasharp_version }}
-      dotnet_alpine_image: mcr.microsoft.com/dotnet/sdk:10.0-alpine3.23
+      dotnet_alpine_image: mcr.microsoft.com/dotnet/sdk:10.0-alpine3.22
 
   build-windows:
     needs: preflight
@@ -163,6 +163,9 @@ jobs:
         if: ${{ startsWith(matrix.rid, 'linux-') && !startsWith(matrix.rid, 'linux-musl-') }}
         run: |
           sudo apt-get update
+          sudo apt-get install -y lsb-release software-properties-common gnupg
+          # Installs latest LLVM repository
+          sudo bash -c "$(wget -O - https://apt.llvm.org/llvm.sh)"
           sudo apt-get install -y clang lld xvfb zlib1g-dev libfontconfig1-dev libfreetype6 libgl1 libice6 libsm6 libx11-6 libxcb1 libxcursor1 libxext6 libxfixes3 libxinerama1 libxrandr2 libxrender1 libxi6
 
       - name: Setup .NET
@@ -346,7 +349,7 @@ jobs:
           docker run --rm \
             -v "${{ github.workspace }}:/workspace" \
             -w /workspace \
-            alpine:3.23 \
+            alpine:3.22 \
             sh -c 'apk add --no-cache binutils pax-utils && app="artifacts/smoke-${{ matrix.rid }}/AvaloniaStaticLinkSmoke" && readelf -l "$app" | grep "Requesting program interpreter: /lib/ld-musl-" && scanelf -n "$app" && ! scanelf -n "$app" | grep -E "ld-linux|ld64.so"'
 
       - name: Run Linux musl Avalonia smoke app
@@ -357,7 +360,7 @@ jobs:
           docker run --rm \
             -v "${{ github.workspace }}:/workspace" \
             -w /workspace/artifacts/smoke-${{ matrix.rid }} \
-            alpine:3.23 \
+            alpine:3.22 \
             sh -c 'apk add --no-cache xvfb-run libstdc++ libgcc fontconfig freetype ttf-dejavu libx11 libxcb libxext libxrender libxi libxrandr libxcursor libxfixes libxinerama libice libsm mesa-gl mesa-egl && fc-cache -f && fc-match sans && chmod +x ./AvaloniaStaticLinkSmoke && timeout 15s xvfb-run -a ./AvaloniaStaticLinkSmoke || code=$?; if [ "${code:-0}" = 124 ] || [ "${code:-0}" = 143 ]; then echo "Avalonia musl smoke app stayed alive for 15 seconds."; exit 0; fi; exit "${code:-0}"'
 
       - name: Run macOS Avalonia smoke app
