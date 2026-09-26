@@ -55,7 +55,7 @@ jobs:
           sudo apt-get install -y clang lld llvm ninja-build curl xz-utils pkg-config python3 gn libfontconfig1-dev
 
       - name: Set up QEMU
-        if: matrix.alpine_arch != 'x86_64'
+        if: matrix.rid == 'linux-musl-arm'
         uses: docker/setup-qemu-action@v4
 
       - name: Setup Alpine Linux 3.21 Sysroot
@@ -85,9 +85,6 @@ jobs:
             musl-dev \
             fontconfig-dev \
             glib-dev \
-            libx11-dev \
-            libxcb-dev \
-            libxext-dev \
             linux-headers \
             libstdc++-dev \ 
             freetype-dev
