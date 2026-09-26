@@ -227,12 +227,11 @@ jobs:
           dotnet publish "$project_dir/AvaloniaStaticLinkSmoke.csproj" \
             -c Release \
             -r "${{ matrix.rid }}" \
-            --configfile "$project_dir/NuGet.config" \
-            /p:PublishAot=true \
-            /p:SelfContained=true \
-            /p:PublishSingleFile=true \
-            /p:StripSymbols=true \
-            /p:PublishDir="$PWD/artifacts/smoke-${{ matrix.rid }}/"
+            -p:PublishAot=true \
+            -p:SelfContained=true \
+            -p:PublishSingleFile=true \
+            -p:StripSymbols=true \
+            -p:PublishDir="$PWD/artifacts/smoke-${{ matrix.rid }}/"
 
       - name: Publish Avalonia musl smoke app
         if: ${{ startsWith(matrix.rid, 'linux-musl-') }}
