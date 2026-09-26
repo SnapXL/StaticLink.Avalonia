@@ -9,6 +9,7 @@ OUTPUT_DIR="${OUTPUT_DIR:-$ROOT_DIR/External/NativeStatic/$RID}"
 SKIASHARP_VERSION="${SKIASHARP_VERSION:-4.154.0-preview.1}"
 BUILD_JOBS="${BUILD_JOBS:-$(sysctl -n hw.ncpu)}"
 SKIA_DEPS_RETRIES="${SKIA_DEPS_RETRIES:-3}"
+HARFBUZZ_COMMIT="${HARFBUZZ_COMMIT:-863d3f7787c6df18d20e4535c5906bf3eb803bd5}"
 
 require_cmd() {
   if ! command -v "$1" >/dev/null 2>&1; then
@@ -67,23 +68,97 @@ sync_skiasharp() {
 }
 
 prepare_skia_git_sync_deps() {
-  local sync_deps="$1/tools/git-sync-deps"
-  python3 - "$sync_deps" <<'PY'
+  skia_dir="$1"
+python3 - "$skia_dir" "$HARFBUZZ_COMMIT" <<'PY'
 import re
 import pathlib
 import sys
 
-path = pathlib.Path(sys.argv[1])
-text = path.read_text()
-deps_path = path.with_name("DEPS")
+skia_dir = pathlib.Path(sys.argv[1])
+harfbuzz_target = sys.argv[2]
+sync_deps_path = skia_dir / "tools" / "git-sync-deps"
+deps_path = skia_dir / "DEPS"
+
 if deps_path.exists():
-    deps = deps_path.read_text()
-    deps = re.sub(r'^\s*"third_party/externals/dng_sdk"\s*:\s*"[^"]+",\s*\n', '', deps, flags=re.MULTILINE)
-    deps_path.write_text(deps)
-old = "  multithread(git_checkout_to_directory, list_of_arg_lists)"
-new = "  for args in list_of_arg_lists:\n    git_checkout_to_directory(*args)"
-if old in text:
-    path.write_text(text.replace(old, new))
+    deps = deps_path.read_text(encoding='utf-8', errors='ignore')
+    # Normalize non-breaking spaces to standard spaces
+    deps = deps.replace('\xa0', ' ')
+    
+    # List of unneeded third-party externals to strip out completely based on current build config
+    unused_deps = [
+        "dng_sdk",
+        "piex",
+        "spirv-cross",
+        "vulkanmemoryallocator",
+        "vulkan-headers",
+        "d3d12allocator",
+    ]
+    
+    for dep in unused_deps:
+        pattern = rf'^\s*["\']third_party/externals/{dep}["\']\s*:\s*[^,\n]+,\s*\n'
+        deps = re.sub(pattern, '', deps, flags=re.MULTILINE)
+    
+    # Dynamically update HarfBuzz hash using a callback function to avoid group reference errors
+    def replace_harfbuzz(match):
+        return match.group(1) + harfbuzz_target + match.group(2)
+        
+    deps = re.sub(
+        r'(["\']third_party/externals/harfbuzz["\']\s*:\s*["\'][^@]+@)[^"\']+(["\'])',
+        replace_harfbuzz,
+        deps
+    )
+    # Safely swap Google's proxy mirrors for GitHub-backed dependencies directly to github.com
+    deps = re.sub(
+        r'https://(skia|chromium)\.googlesource\.com/external/github\.com/([^@]+)\.git',
+        r'https://github.com/\2.git',
+        deps
+    )
+    deps = re.sub(
+        r'https://(skia|chromium)\.googlesource\.com/external/github\.com/([^@"]+)',
+        r'https://github.com/\2',
+        deps
+    )
+    
+    # Explicitly redirect libpng and libwebp to their mirror GitHub repositories
+    deps = re.sub(
+        r'("third_party/externals/libpng"\s*:\s*)"[^@]+@',
+        r'\1"https://github.com/pnggroup/libpng.git@',
+        deps
+    )
+    deps = re.sub(
+        r'("third_party/externals/libwebp"\s*:\s*)"[^@]+@',
+        r'\1"https://github.com/webmproject/libwebp.git@',
+        deps
+    )
+    deps = re.sub(
+        r'("third_party/externals/freetype"\s*:\s*)"[^@]+@',
+        r'\1"https://github.com/aseprite/freetype2.git@',
+        deps
+    )
+    deps = re.sub(
+        r'("third_party/externals/zlib"\s*:\s*)"[^@]+@',
+        r'\1"https://github.com/xmake-mirror/chromium_zlib.git@',
+        deps
+    )
+    
+    deps_path.write_text(deps, encoding='utf-8')
+    print("Successfully patched and cleaned DEPS file.")
+else:
+    print(f"Warning: DEPS file not found at {deps_path}", file=sys.stderr)
+
+if sync_deps_path.exists():
+    text = sync_deps_path.read_text(encoding='utf-8', errors='ignore')
+    # Patch git-sync-deps multithreading safely using regex
+    if "multithread(" in text:
+        text = re.sub(
+            r'multithread\s*\(\s*git_checkout_to_directory\s*,\s*([^)]+)\s*\)',
+            r'for args in \1:\n    git_checkout_to_directory(*args)',
+            text
+        )
+    sync_deps_path.write_text(text, encoding='utf-8')
+    print("Successfully patched git-sync-deps.")
+else:
+    print(f"Warning: git-sync-deps not found at {sync_deps_path}", file=sys.stderr)
 PY
 }
 

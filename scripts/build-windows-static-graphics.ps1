@@ -15,6 +15,8 @@ $OutputDir = if ($env:OUTPUT_DIR) { $env:OUTPUT_DIR } else { Join-Path $RootDir 
 $BuildJobs = if ($env:BUILD_JOBS) { $env:BUILD_JOBS } else { [Environment]::ProcessorCount }
 $AnglePatchDir = if ($env:ANGLE_PATCH_DIR) { $env:ANGLE_PATCH_DIR } else { Join-Path $RootDir "External\NativeStatic\patches" }
 $SkiaDepsRetries = if ($env:SKIA_DEPS_RETRIES) { [int]$env:SKIA_DEPS_RETRIES } else { 3 }
+$HarfbuzzCommit = if ($env:HarfbuzzCommit) { $env:HarfbuzzCommit } else { "863d3f7787c6df18d20e4535c5906bf3eb803bd5" }
+
 
 if (-not $env:DEPOT_TOOLS_WIN_TOOLCHAIN) {
     $env:DEPOT_TOOLS_WIN_TOOLCHAIN = "0"
@@ -382,18 +384,52 @@ function Patch-WinX86SkiaLinker($SkiaDir) {
 }
 
 function Prepare-SkiaGitSyncDeps($SkiaDir) {
-    $syncDeps = Join-Path $SkiaDir "tools\git-sync-deps"
-    $text = Get-Content -Path $syncDeps -Raw
-    $depsPath = Join-Path $SkiaDir "DEPS"
+    $depsPath = Join-Path$SkiaDir "DEPS"
     if (Test-Path $depsPath) {
-        $depsText = Get-Content -Path $depsPath -Raw
-        $depsText = [regex]::Replace($depsText, '(?m)^\s*"third_party/externals/dng_sdk"\s*:\s*"[^"]+",\s*\r?\n', '')
-        Set-Content -Path $depsPath -Value $depsText -NoNewline -Encoding UTF8
+        $deps = Get-Content -Path$depsPath -Raw -Encoding utf8
+        $deps =$deps -replace "\u00A0", " "
+
+        $unusedDeps = @(
+            "dng_sdk",
+            "piex",
+            "spirv-cross",
+            "vulkanmemoryallocator",
+            "vulkan-headers"
+        )
+
+        foreach ($dep in$unusedDeps) {
+            $pattern = '^\s*["\x27]third_party/externals/' + [regex]::Escape($dep) + '["\x27]\s*:\s*[^,\n]+,\s*\n'
+            $deps = [regex]::Replace($deps,$pattern, '', [System.Text.RegularExpressions.RegexOptions]::Multiline)
+        }
+
+        if (-not [string]::IsNullOrEmpty($HarfbuzzCommit)) {$harfbuzzPattern = '(["\x27]third_party/externals/harfbuzz["\x27]\s*:\s*["\x27][^@]+@)[^"\x27]+(["\x27])'
+            $deps = [regex]::Replace($deps,$harfbuzzPattern, "`$1$HarfbuzzCommit`$2")
+        }
+
+        $deps = [regex]::Replace($deps, 'https://(skia|chromium)\.googlesource\.com/external/github\.com/([^@]+)\.git', 'https://github.com/$2.git')
+        $deps = [regex]::Replace($deps, 'https://(skia|chromium)\.googlesource\.com/external/github\.com/([^@"]+)', 'https://github.com/$2')
+
+        $deps = [regex]::Replace($deps, '("third_party/externals/libpng"\s*:\s*)"[^@]+@', '$1"https://github.com/pnggroup/libpng.git@')
+        $deps = [regex]::Replace($deps, '("third_party/externals/libwebp"\s*:\s*)"[^@]+@', '$1"https://github.com/webmproject/libwebp.git@')
+        $deps = [regex]::Replace($deps, '("third_party/externals/freetype"\s*:\s*)"[^@]+@', '$1"https://github.com/aseprite/freetype2.git@')
+        $deps = [regex]::Replace($deps, '("third_party/externals/zlib"\s*:\s*)"[^@]+@', '$1"https://github.com/xmake-mirror/chromium_zlib.git@')
+
+        Set-Content -Path $depsPath -Value$deps -NoNewline -Encoding utf8
+        Write-Host "Successfully patched and cleaned DEPS file."
     }
-    $old = "  multithread(git_checkout_to_directory, list_of_arg_lists)"
-    $new = "  for args in list_of_arg_lists:`n    git_checkout_to_directory(*args)"
-    if ($text.Contains($old)) {
-        Set-Content -Path $syncDeps -Value $text.Replace($old, $new) -NoNewline -Encoding UTF8
+
+    $syncDeps = Join-Path$SkiaDir "tools\git-sync-deps"
+    if (Test-Path $syncDeps) {
+        $text = Get-Content -Path$syncDeps -Raw -Encoding utf8
+        if ($text -match "multithread\(") {
+            $text = [regex]::Replace(
+                    $text,
+                    'multithread\s*\(\s*git_checkout_to_directory\s*,\s*([^)]+)\s*\)',
+                    'for args in $1:`n    git_checkout_to_directory(*args)'
+            )
+            Set-Content -Path $syncDeps -Value $text -NoNewline -Encoding utf8
+            Write-Host "Successfully patched git-sync-deps."
+        }
     }
 }
 

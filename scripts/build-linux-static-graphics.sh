@@ -193,6 +193,39 @@ if deps_path.exists():
         replace_harfbuzz,
         deps
     )
+    # Safely swap Google's proxy mirrors for GitHub-backed dependencies directly to github.com
+    deps = re.sub(
+        r'https://(skia|chromium)\.googlesource\.com/external/github\.com/([^@]+)\.git',
+        r'https://github.com/\2.git',
+        deps
+    )
+    deps = re.sub(
+        r'https://(skia|chromium)\.googlesource\.com/external/github\.com/([^@"]+)',
+        r'https://github.com/\2',
+        deps
+    )
+    
+    # Explicitly redirect libpng and libwebp to their mirror GitHub repositories
+    deps = re.sub(
+        r'("third_party/externals/libpng"\s*:\s*)"[^@]+@',
+        r'\1"https://github.com/pnggroup/libpng.git@',
+        deps
+    )
+    deps = re.sub(
+        r'("third_party/externals/libwebp"\s*:\s*)"[^@]+@',
+        r'\1"https://github.com/webmproject/libwebp.git@',
+        deps
+    )
+    deps = re.sub(
+        r'("third_party/externals/freetype"\s*:\s*)"[^@]+@',
+        r'\1"https://github.com/aseprite/freetype2.git@',
+        deps
+    )
+    deps = re.sub(
+        r'("third_party/externals/zlib"\s*:\s*)"[^@]+@',
+        r'\1"https://github.com/xmake-mirror/chromium_zlib.git@',
+        deps
+    )
     
     deps_path.write_text(deps, encoding='utf-8')
     print("Successfully patched and cleaned DEPS file.")
