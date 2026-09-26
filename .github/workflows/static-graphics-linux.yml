@@ -36,6 +36,7 @@ jobs:
       SKIASHARP_VERSION: ${{ inputs.skiasharp_version }}
       RID: ${{ matrix.rid }}
       TARGET_CPU: ${{ matrix.target_cpu }}
+      PATH: /usr/local/bin:/usr/bin:/bin
       CC: clang
       CXX: clang++
       LLVM_AR: llvm-ar

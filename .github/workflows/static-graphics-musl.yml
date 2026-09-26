@@ -108,6 +108,7 @@ jobs:
 
       - name: Build Linux musl static graphics libraries
         env:
+          PATH: /usr/local/bin:/usr/bin:/bin
           CC: clang
           CXX: clang++
           RID: ${{ matrix.rid }}
