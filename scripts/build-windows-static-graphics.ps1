@@ -384,10 +384,10 @@ function Patch-WinX86SkiaLinker($SkiaDir) {
 }
 
 function Prepare-SkiaGitSyncDeps($SkiaDir) {
-    $depsPath = Join-Path$SkiaDir "DEPS"
+    $depsPath = Join-Path $SkiaDir "DEPS"
     if (Test-Path $depsPath) {
-        $deps = Get-Content -Path$depsPath -Raw -Encoding utf8
-        $deps =$deps -replace "\u00A0", " "
+        $deps = Get-Content -Path $depsPath -Raw -Encoding utf8
+        $deps = $deps -replace "\u00A0", " "
 
         $unusedDeps = @(
             "dng_sdk",
@@ -414,13 +414,13 @@ function Prepare-SkiaGitSyncDeps($SkiaDir) {
         $deps = [regex]::Replace($deps, '("third_party/externals/freetype"\s*:\s*)"[^@]+@', '$1"https://github.com/aseprite/freetype2.git@')
         $deps = [regex]::Replace($deps, '("third_party/externals/zlib"\s*:\s*)"[^@]+@', '$1"https://github.com/xmake-mirror/chromium_zlib.git@')
 
-        Set-Content -Path $depsPath -Value$deps -NoNewline -Encoding utf8
+        Set-Content -Path $depsPath -Value $deps -NoNewline -Encoding utf8
         Write-Host "Successfully patched and cleaned DEPS file."
     }
 
-    $syncDeps = Join-Path$SkiaDir "tools\git-sync-deps"
+    $syncDeps = Join-Path $SkiaDir "tools\git-sync-deps"
     if (Test-Path $syncDeps) {
-        $text = Get-Content -Path$syncDeps -Raw -Encoding utf8
+        $text = Get-Content -Path $syncDeps -Raw -Encoding utf8
         if ($text -match "multithread\(") {
             $text = [regex]::Replace(
                     $text,
