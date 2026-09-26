@@ -544,11 +544,11 @@ jobs:
           usesh: true
           prepare: |
             pkg install -y \
-              clang lld \
+              llvm \
               icu libunwind libinotify \
               krb5 openssl \
               fontconfig freetype2 \
-              xorg-vfbserver mesa-devel xauth \
+              xorg-vfbserver mesa-dri xauth \
               libepoll-shim wget unzip
 
             # Install the .NET 10 SDK for FreeBSD from the community source-build.
