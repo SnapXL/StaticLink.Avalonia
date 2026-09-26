@@ -145,22 +145,65 @@ path.write_text(text)
 print("Successfully patched git-sync-deps via Python!")
 PY
 
-  python3 - "$sync_deps" <<'PY'
-import re
-import pathlib
-import sys
-path = pathlib.Path(sys.argv[1])
-text = path.read_text()
-deps_path = path.with_name("DEPS")
-if deps_path.exists():
-    deps = deps_path.read_text()
-    deps = re.sub(r'^\s*"third_party/externals/dng_sdk"\s*:\s*"[^"]+",\s*\n', '', deps, flags=re.MULTILINE)
-    deps_path.write_text(deps)
-old = "  multithread(git_checkout_to_directory, list_of_arg_lists)"
-new = "  for args in list_of_arg_lists:\n    git_checkout_to_directory(*args)"
-if old in text:
-    path.write_text(text.replace(old, new))
-PY
+  skia_dir="$1"
+  python3 - "$skia_dir" "$HARFBUZZ_COMMIT" <<'PY'
+  import re
+  import pathlib
+  import sys
+  
+  skia_dir = pathlib.Path(sys.argv[1])
+  harfbuzz_target = sys.argv[2]
+  sync_deps_path = skia_dir / "tools" / "git-sync-deps"
+  deps_path = skia_dir / "DEPS"
+  
+  if deps_path.exists():
+      deps = deps_path.read_text(encoding='utf-8', errors='ignore')
+      # Normalize non-breaking spaces to standard spaces
+      deps = deps.replace('\xa0', ' ')
+      
+      # List of unneeded third-party externals to strip out completely based on current build config
+      unused_deps = [
+          "dng_sdk",
+          "piex",
+          "spirv-cross",
+          "vulkanmemoryallocator",
+          "vulkan-headers",
+          "d3d12allocator",
+      ]
+      
+      for dep in unused_deps:
+          pattern = rf'^\s*["\']third_party/externals/{dep}["\']\s*:\s*[^,\n]+,\s*\n'
+          deps = re.sub(pattern, '', deps, flags=re.MULTILINE)
+      
+      # Dynamically update HarfBuzz hash using a callback function to avoid group reference errors
+      def replace_harfbuzz(match):
+          return match.group(1) + harfbuzz_target + match.group(2)
+          
+      deps = re.sub(
+          r'(["\']third_party/externals/harfbuzz["\']\s*:\s*["\'][^@]+@)[^"\']+(["\'])',
+          replace_harfbuzz,
+          deps
+      )
+      
+      deps_path.write_text(deps, encoding='utf-8')
+      print("Successfully patched and cleaned DEPS file.")
+  else:
+      print(f"Warning: DEPS file not found at {deps_path}", file=sys.stderr)
+  
+  if sync_deps_path.exists():
+      text = sync_deps_path.read_text(encoding='utf-8', errors='ignore')
+      # Patch git-sync-deps multithreading safely using regex
+      if "multithread(" in text:
+          text = re.sub(
+              r'multithread\s*\(\s*git_checkout_to_directory\s*,\s*([^)]+)\s*\)',
+              r'for args in \1:\n    git_checkout_to_directory(*args)',
+              text
+          )
+      sync_deps_path.write_text(text, encoding='utf-8')
+      print("Successfully patched git-sync-deps.")
+  else:
+      print(f"Warning: git-sync-deps not found at {sync_deps_path}", file=sys.stderr)
+  PY
 
   python3 - "$skia_dir" <<'PY'
 import pathlib
