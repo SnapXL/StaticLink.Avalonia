@@ -58,6 +58,8 @@ jobs:
           key: native-work-windows-${{ matrix.rid }}-${{ inputs.skiasharp_version }}-${{ inputs.angle_branch }}-${{ hashFiles('External/NativeStatic/patches/*.patch', 'scripts/build-windows-static-graphics.ps1') }}
 
       - name: Install Windows 11 SDK 28000
+        id: install-sdk
+        background: true
         shell: pwsh
         run: |
           winget install --id Microsoft.WindowsSDK.10.0.28000 --silent --accept-package-agreements --accept-source-agreements
@@ -65,12 +67,7 @@ jobs:
           if (-not (Test-Path "$sdkPath\um")) {
               throw "SDK 28000 headers still missing at $sdkPath\um"
           }
-
-      - name: Setup MSVC environment
-        uses: TheMrMilchmann/setup-msvc-dev@v4
-        with:
-          arch: ${{ matrix.msvc_arch }}
-          sdk: 10.0.28000.0
+        
 
       - name: Configure Chromium Visual Studio environment
         shell: pwsh
@@ -84,6 +81,16 @@ jobs:
         run: |
           git config --global core.longpaths true
           choco install ninja llvm -y
+    
+
+      - name: Build Windows static graphics libraries (Skia)
+        shell: pwsh
+        env:
+          RID: ${{ matrix.rid }}
+          TARGET_CPU: ${{ matrix.target_cpu }}
+          DEPOT_TOOLS_WIN_TOOLCHAIN: 0
+          GYP_MSVS_VERSION: 18.0
+        run: .\scripts\build-windows-static-graphics.ps1 skia
 
       - name: Validate Windows ANGLE inputs
         shell: pwsh
@@ -94,14 +101,21 @@ jobs:
           GYP_MSVS_VERSION: 18.0
         run: .\scripts\build-windows-static-graphics.ps1 angle-preflight
 
-      - name: Build Windows static graphics libraries
+      - name: Setup MSVC environment
+        wait: install-sdk
+        uses: TheMrMilchmann/setup-msvc-dev@v4
+        with:
+          arch: ${{ matrix.msvc_arch }}
+          sdk: 10.0.28000.0
+
+      - name: Build Windows static graphics libraries (ANGLE)
         shell: pwsh
         env:
           RID: ${{ matrix.rid }}
           TARGET_CPU: ${{ matrix.target_cpu }}
           DEPOT_TOOLS_WIN_TOOLCHAIN: 0
           GYP_MSVS_VERSION: 18.0
-        run: .\scripts\build-windows-static-graphics.ps1 all
+        run: .\scripts\build-windows-static-graphics.ps1 angle
 
       - name: Upload Windows static archives
         uses: actions/upload-artifact@v4
