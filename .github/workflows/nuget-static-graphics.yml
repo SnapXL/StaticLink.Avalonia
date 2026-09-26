@@ -35,7 +35,7 @@ jobs:
     uses: ./.github/workflows/static-graphics-musl.yml
     with:
       skiasharp_version: ${{ needs.preflight.outputs.skiasharp_version }}
-      dotnet_alpine_image: mcr.microsoft.com/dotnet/sdk:10.0-alpine3.24
+      dotnet_alpine_image: mcr.microsoft.com/dotnet/sdk:10.0-alpine3.22
 
   build-windows:
     needs: preflight
