@@ -67,14 +67,7 @@ jobs:
           if (-not (Test-Path "$sdkPath\um")) {
               throw "SDK 28000 headers still missing at $sdkPath\um"
           }
-        
-
-      - name: Configure Chromium Visual Studio environment
-        shell: pwsh
-        run: |
-          "DEPOT_TOOLS_WIN_TOOLCHAIN=0" >> $env:GITHUB_ENV
-          "GYP_MSVS_VERSION=18.0" >> $env:GITHUB_ENV
-          "GYP_MSVS_OVERRIDE_PATH=$($env:VSINSTALLDIR.TrimEnd('\', '/'))" >> $env:GITHUB_ENV
+                  
 
       - name: Install native build dependencies
         shell: pwsh
@@ -109,6 +102,13 @@ jobs:
         with:
           arch: ${{ matrix.msvc_arch }}
           sdk: 10.0.28000.0
+
+      - name: Configure Chromium Visual Studio environment
+        shell: pwsh
+        run: |
+          "DEPOT_TOOLS_WIN_TOOLCHAIN=0" >> $env:GITHUB_ENV
+          "GYP_MSVS_VERSION=18.0" >> $env:GITHUB_ENV
+          "GYP_MSVS_OVERRIDE_PATH=$($env:VSINSTALLDIR.TrimEnd('\', '/'))" >> $env:GITHUB_ENV
 
       - name: Build Windows static graphics libraries (ANGLE)
         shell: pwsh
