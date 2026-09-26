@@ -33,33 +33,30 @@ jobs:
           python3 - <<'PY'
           import os
           import pathlib
+          import re
           import xml.etree.ElementTree as ET
           
           project = pathlib.Path("NuGet/StaticGraphics/StaticLink.Avalonia.csproj")
           root = ET.parse(project).getroot()
-          package_version = root.findtext(".//Version").strip()
-          skia_reference = next(
-              item.attrib["Version"]
-              for item in root.findall(".//PackageReference")
-              if item.attrib.get("Include") == "SkiaSharp"
-          ).strip()
+          raw_version = root.findtext(".//Version").strip()
           
-          if package_version.startswith(skia_reference):
-              # Remove skia_reference and any leading separator (like '-' or '.')
-              angle_branch = package_version[len(skia_reference):].lstrip("-.")
-          else:
-              angle_branch = ""
+          # Extract clean base version (e.g., 4.154.0-preview.1 from 4.154.0-preview.1.26454.9)
+          match = re.match(r"^(\d+\.\d+\.\d+(-preview\.\d+)?)", raw_version)
+          skiasharp_version = match.group(1) if match else raw_version
           
-          print(f"Parsed Package Version: {package_version}")
-          print(f"Parsed SkiaSharp Version: {skia_reference}")
-          print(f"Parsed Angle Branch: {angle_branch}")
+          package_version = raw_version
+          angle_branch = raw_version[len(skiasharp_version):].lstrip("-.")
+          
+          print(f"Full Package Version: {package_version}")
+          print(f"Clean SkiaSharp Version: {skiasharp_version}")
+          print(f"Angle Branch / Extra Suffix: {angle_branch}")
           
           if os.environ.get("GITHUB_REF_TYPE") == "tag":
               expected_tag = f"v{package_version}"
           
           with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
               output.write(f"package_version={package_version}\n")
-              output.write(f"skiasharp_version={skia_reference}\n")
+              output.write(f"skiasharp_version={skiasharp_version}\n")
               output.write(f"angle_branch={angle_branch}\n")
           PY
       - name: Compile smoke project
