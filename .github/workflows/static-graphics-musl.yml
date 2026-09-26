@@ -108,6 +108,8 @@ jobs:
 
       - name: Build Linux musl static graphics libraries
         env:
+          CC: clang
+          CXX: clang++
           RID: ${{ matrix.rid }}
           TARGET_CPU: ${{ matrix.target_cpu }}
           OUTPUT_DIR: External/NativeStatic/${{ matrix.rid }}/native

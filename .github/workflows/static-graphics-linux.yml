@@ -36,6 +36,8 @@ jobs:
       SKIASHARP_VERSION: ${{ inputs.skiasharp_version }}
       RID: ${{ matrix.rid }}
       TARGET_CPU: ${{ matrix.target_cpu }}
+      CC: clang
+      CXX: clang++
       LLVM_AR: llvm-ar
     steps:
       - name: Install native build dependencies
