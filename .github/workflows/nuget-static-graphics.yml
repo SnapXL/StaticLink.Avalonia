@@ -560,11 +560,11 @@ jobs:
             wget -q "https://svn.exactcode.de/t2/tags/8.0/package/xorg/xorg-server/xvfb-run.sh"
             mv xvfb-run.sh /usr/local/bin/xvfb-run
             chmod +x /usr/local/bin/xvfb-run
-            sudo tee /usr/local/bin/mcookie << 'EOF'
+            tee /usr/local/bin/mcookie << 'EOF'
             #!/bin/sh
             openssl rand -hex 16
             EOF
-            sudo chmod +x /usr/local/bin/mcookie
+            chmod +x /usr/local/bin/mcookie
           run: |
             set -e
             export DOTNET_OPENSSL_VERSION_OVERRIDE=35
