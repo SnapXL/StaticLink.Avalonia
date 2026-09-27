@@ -59,7 +59,11 @@ jobs:
         background: true
         shell: pwsh
         run: |
-          winget install --id Microsoft.WindowsSDK.10.0.28000 --silent --accept-package-agreements --accept-source-agreements
+          & "${env:ProgramFiles}\Microsoft Visual Studio\2022\Enterprise\Common7\Tools\vs_installer.exe" modify `
+              --installPath "${env:ProgramFiles}\Microsoft Visual Studio\2022\Enterprise" `
+              --add Microsoft.VisualStudio.Component.Windows11SDK.28000 `
+              --quiet --wait --norestart
+          
           $sdkPath = "${env:ProgramFiles(x86)}\Windows Kits\10\Include\10.0.28000.0"
           if (-not (Test-Path "$sdkPath\um")) {
               throw "SDK 28000 headers still missing at $sdkPath\um"
