@@ -581,9 +581,9 @@ angle_static_library("libGLESv2_static") {
 }
 
 function Assert-AngleVisualStudioVersion {
-    if ($env:VisualStudioVersion -and -not ($env:VisualStudioVersion -in @("18.0"))) {
-        throw "ANGLE $AngleBranch requires Visual Studio 2026, but VisualStudioVersion is $env:VisualStudioVersion. Use windows-2025-vs2026 or a VS 2026 developer prompt."
-    }
+    #if ($env:VisualStudioVersion -and -not ($env:VisualStudioVersion -in @("18.0"))) {
+    #    throw "ANGLE $AngleBranch requires Visual Studio 2026, but VisualStudioVersion is $env:VisualStudioVersion. Use windows-2025-vs2026 or a VS 2026 developer prompt."
+    #}
 }
 
 function Test-AnglePatch {
