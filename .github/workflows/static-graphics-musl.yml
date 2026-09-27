@@ -92,18 +92,18 @@ jobs:
           ARCH_NAME=$(sudo cat "$SYSROOT/etc/apk/arch")
           TRIPLE="${ARCH_NAME}-alpine-linux-musl"
           CXX_INCLUDE_DIR="$SYSROOT/usr/include"
-
+          MACHINE_INCLUDE_DIR="$CXX_INCLUDE_DIR/c++/13.2.1/$TRIPLE"
           sudo mkdir -p /usr/local/bin
           
           sudo tee /usr/local/bin/clang << EOF
           #!/bin/sh
-          exec /usr/bin/clang --target=$TRIPLE -fuse-ld=lld -Wno-unused-command-line-argument --sysroot="$SYSROOT" --gcc-toolchain=/nonexistent -isystem$CXX_INCLUDE_DIR -isystem$SYSROOT/usr/include/c++/13.2.1 "\$@"
+          exec /usr/bin/clang --target=$TRIPLE -fuse-ld=lld -Wno-unused-command-line-argument --sysroot="$SYSROOT" --gcc-toolchain=/nonexistent -isystem$CXX_INCLUDE_DIR -isystem$SYSROOT/usr/include/c++/13.2.1 -isystem "$MACHINE_INCLUDE_DIR" "\$@"
           EOF
           sudo chmod +x /usr/local/bin/clang
 
           sudo tee /usr/local/bin/clang++ << EOF
           #!/bin/sh
-          exec /usr/bin/clang++ --target=$TRIPLE -fuse-ld=lld -Wno-unused-command-line-argument --sysroot="$SYSROOT" --gcc-toolchain=/nonexistent -isystem$CXX_INCLUDE_DIR -isystem$SYSROOT/usr/include/c++/13.2.1 "\$@"
+          exec /usr/bin/clang++ --target=$TRIPLE -fuse-ld=lld -Wno-unused-command-line-argument --sysroot="$SYSROOT" --gcc-toolchain=/nonexistent -isystem$CXX_INCLUDE_DIR -isystem$SYSROOT/usr/include/c++/13.2.1 -isystem "$MACHINE_INCLUDE_DIR" "\$@"
           EOF
           sudo chmod +x /usr/local/bin/clang++
 
