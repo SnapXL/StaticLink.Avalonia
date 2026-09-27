@@ -91,7 +91,7 @@ jobs:
 
           ARCH_NAME=$(sudo cat "$SYSROOT/etc/apk/arch")
           TRIPLE="${ARCH_NAME}-alpine-linux-musl"
-          CXX_INCLUDE_DIR="$SYSROOT/usr/include/c++/14.2.0"
+          CXX_INCLUDE_DIR="$SYSROOT/usr/include"
 
           sudo mkdir -p /usr/local/bin
           
