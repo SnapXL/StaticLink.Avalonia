@@ -8,6 +8,7 @@ Differences from upstream:
 - ANGLE is built on Windows only. Upstream builds it on every platform, but Avalonia only uses it on Windows. This results in a smaller NuGet package.
 - Linux static archives are built on Ubuntu 18.04 (Sysroot), which improves archive portability. Also, we provide builds on Linux (glibc/musl) ARMHF too!
 - FreeBSD x64 and arm64 are supported. Cross compiled for FreeBSD 14.5.
+- Windows x86 builds are dropped.
 
 ## Install
 

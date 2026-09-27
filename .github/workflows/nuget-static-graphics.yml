@@ -81,7 +81,7 @@ jobs:
 
       - name: Move static archives into RID directories
         run: |
-          for rid in win-x64 win-x86 win-arm64 linux-x64 linux-arm64 linux-musl-x64 linux-musl-arm64 osx-x64 osx-arm64 freebsd-x64 freebsd-arm64; do
+          for rid in win-x64 win-arm64 linux-x64 linux-arm64 linux-arm linux-musl-x64 linux-musl-arm64 linux-musl-arm osx-x64 osx-arm64 freebsd-x64 freebsd-arm64; do
             mkdir -p "External/NativeStatic/$rid"
             mv "External/NativeStatic/native-static-$rid"/* "External/NativeStatic/$rid/"
             rmdir "External/NativeStatic/native-static-$rid"
@@ -93,20 +93,19 @@ jobs:
 
       - name: Verify static archives
         run: |
-          for rid in linux-x64 linux-arm64 linux-musl-x64 linux-musl-arm64 osx-x64 osx-arm64 freebsd-x64 freebsd-arm64; do
+          for rid in linux-x64 linux-arm64 linux-arm linux-musl-x64 linux-musl-arm64 linux-musl-arm osx-x64 osx-arm64 freebsd-x64 freebsd-arm64; do
             test -f External/NativeStatic/$rid/native/libskia.a
             test -f External/NativeStatic/$rid/native/libSkiaSharp.a
             test -f External/NativeStatic/$rid/native/libHarfBuzzSharp.a
           done
           
-          for rid in win-x64 win-x86 win-arm64; do
+          for rid in win-x64 win-arm64; do
             test -f External/NativeStatic/$rid/native/skia.lib
             test -f External/NativeStatic/$rid/native/SkiaSharp.lib
             test -f External/NativeStatic/$rid/native/libHarfBuzzSharp.lib
             test -f External/NativeStatic/$rid/native/libANGLE_static.lib
             test -f External/NativeStatic/$rid/native/libGLESv2_static.lib
           done
-          test -f External/NativeStatic/win-x86/native/skia_x86_stdcall_thunks.lib
 
       - name: Pack NuGet package
         run: dotnet pack NuGet/StaticGraphics/StaticLink.Avalonia.csproj -c Release -o artifacts/nuget
@@ -129,12 +128,9 @@ jobs:
           - rid: win-x64
             runner: windows-2022
             msvc_arch: x64
-          - rid: win-x86
-            runner: windows-2022
-            msvc_arch: x86
           - rid: win-arm64
-            runner: windows-2022
-            msvc_arch: amd64_arm64
+            runner: windows-11-arm
+            msvc_arch: arm64
           - rid: linux-x64
             runner: ubuntu-22.04
           - rid: linux-arm64
@@ -298,7 +294,6 @@ jobs:
           $app = Join-Path $PWD "artifacts/smoke-${{ matrix.rid }}/AvaloniaStaticLinkSmoke.exe"
           $expectedMachine = @{
             "win-x64" = "8664 machine"
-            "win-x86" = "14C machine"
             "win-arm64" = "AA64 machine"
           }["${{ matrix.rid }}"]
           $headers = & dumpbin /headers $app | Out-String
@@ -307,7 +302,7 @@ jobs:
           }
 
       - name: Run Windows Avalonia smoke app
-        if: ${{ matrix.rid == 'win-x64' || matrix.rid == 'win-x86' }}
+        if: ${{ startsWith(matrix.rid, 'win-') }}
         shell: pwsh
         run: |
           $ErrorActionPreference = "Stop"
