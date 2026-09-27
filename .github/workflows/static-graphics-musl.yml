@@ -96,21 +96,21 @@ jobs:
           
           sudo tee /usr/local/bin/clang << EOF
           #!/bin/sh
-          exec /usr/bin/clang --target=$TRIPLE --sysroot="$SYSROOT" "\$@"
+          exec /usr/bin/clang --target=$TRIPLE -fuse-ld=lld --sysroot="$SYSROOT" "\$@"
           EOF
           sudo chmod +x /usr/local/bin/clang
 
           sudo tee /usr/local/bin/clang++ << EOF
           #!/bin/sh
-          exec /usr/bin/clang++ --target=$TRIPLE --sysroot="$SYSROOT" "\$@"
+          exec /usr/bin/clang++ --target=$TRIPLE -fuse-ld=lld --sysroot="$SYSROOT" "\$@"
           EOF
           sudo chmod +x /usr/local/bin/clang++
 
       - name: Build Linux musl static graphics libraries
         env:
           PATH: /usr/local/bin:/usr/bin:/bin
-          CC: clang
-          CXX: clang++
+          CC: /usr/local/bin/clang
+          CXX: /usr/local/bin/clang++
           RID: ${{ matrix.rid }}
           TARGET_CPU: ${{ matrix.target_cpu }}
           OUTPUT_DIR: External/NativeStatic/${{ matrix.rid }}/native

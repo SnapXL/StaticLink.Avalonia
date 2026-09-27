@@ -204,7 +204,7 @@ skia_use_xps = false
 skia_use_partition_alloc = false
 cc = "clang"
 cxx = "clang++"
-ar = "ar"
+ar = "llvm-ar"
 extra_cflags = [ "-DSKIA_C_DLL" ]
 extra_cflags_cc = [ "-frtti" ]
 EOF_ARGS

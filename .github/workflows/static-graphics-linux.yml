@@ -37,8 +37,8 @@ jobs:
       RID: ${{ matrix.rid }}
       TARGET_CPU: ${{ matrix.target_cpu }}
       PATH: /usr/local/bin:/usr/bin:/bin
-      CC: clang
-      CXX: clang++
+      CC: /usr/local/bin/clang
+      CXX: /usr/local/bin/clang++
       LLVM_AR: llvm-ar
     steps:
       - name: Install native build dependencies
@@ -79,13 +79,13 @@ jobs:
 
           sudo tee /usr/local/bin/clang << EOF
           #!/bin/sh
-          exec /usr/bin/clang --target=$TRIPLE --sysroot=$SYSROOT -isystem$CXX_INCLUDE_DIR -isystem$SYSROOT/usr/include/c++/10 "\$@"
+          exec /usr/bin/clang --target=$TRIPLE -fuse-ld=lld --sysroot=$SYSROOT -isystem$CXX_INCLUDE_DIR -isystem$SYSROOT/usr/include/c++/10 "\$@"
           EOF
           sudo chmod +x /usr/local/bin/clang
 
           sudo tee /usr/local/bin/clang++ << EOF
           #!/bin/sh
-          exec /usr/bin/clang++ --target=$TRIPLE --sysroot=$SYSROOT -isystem$CXX_INCLUDE_DIR -isystem$SYSROOT/usr/include/c++/10 "\$@"
+          exec /usr/bin/clang++ --target=$TRIPLE -fuse-ld=lld --sysroot=$SYSROOT -isystem$CXX_INCLUDE_DIR -isystem$SYSROOT/usr/include/c++/10 "\$@"
           EOF
           sudo chmod +x /usr/local/bin/clang++
 
