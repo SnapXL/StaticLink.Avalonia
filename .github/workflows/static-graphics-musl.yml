@@ -97,13 +97,13 @@ jobs:
           
           sudo tee /usr/local/bin/clang << EOF
           #!/bin/sh
-          exec /usr/bin/clang --target=$TRIPLE -fuse-ld=lld -Wno-unused-command-line-argument --sysroot="$SYSROOT" --gcc-toolchain=/nonexistent -isystem$CXX_INCLUDE_DIR -isystem$SYSROOT/usr/include/c++/13.2.1 -isystem "$MACHINE_INCLUDE_DIR" "\$@"
+          exec /usr/bin/clang --target=$TRIPLE -fuse-ld=lld -Wno-unused-command-line-argument --sysroot="$SYSROOT" --gcc-toolchain=/nonexistent -isystem$SYSROOT/usr/include/c++/13.2.1 -isystem$MACHINE_INCLUDE_DIR -isystem$CXX_INCLUDE_DIR "\$@"
           EOF
           sudo chmod +x /usr/local/bin/clang
 
           sudo tee /usr/local/bin/clang++ << EOF
           #!/bin/sh
-          exec /usr/bin/clang++ --target=$TRIPLE -fuse-ld=lld -Wno-unused-command-line-argument --sysroot="$SYSROOT" --gcc-toolchain=/nonexistent -isystem$CXX_INCLUDE_DIR -isystem$SYSROOT/usr/include/c++/13.2.1 -isystem "$MACHINE_INCLUDE_DIR" "\$@"
+          exec /usr/bin/clang++ --target=$TRIPLE -fuse-ld=lld -Wno-unused-command-line-argument --sysroot="$SYSROOT" --gcc-toolchain=/nonexistent -isystem$SYSROOT/usr/include/c++/13.2.1 -isystem$MACHINE_INCLUDE_DIR -isystem$CXX_INCLUDE_DIR "\$@"
           EOF
           sudo chmod +x /usr/local/bin/clang++
 
