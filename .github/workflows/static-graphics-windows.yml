@@ -33,7 +33,7 @@ jobs:
           - rid: win-arm64
             target_cpu: arm64
             msvc_arch: amd64_arm64
-    runs-on: windows-2022
+    runs-on: windows-2025
     env:
       SKIASHARP_VERSION: ${{ inputs.skiasharp_version }}
       ANGLE_BRANCH: ${{ inputs.angle_branch }}
