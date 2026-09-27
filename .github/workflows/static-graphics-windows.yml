@@ -54,22 +54,22 @@ jobs:
           path: External/NativeStatic/.work
           key: native-work-windows-${{ matrix.rid }}-${{ inputs.skiasharp_version }}-${{ inputs.angle_branch }}-${{ hashFiles('External/NativeStatic/patches/*.patch', 'scripts/build-windows-static-graphics.ps1') }}
 
-      - name: Install Windows 11 SDK 28000
-        id: install-sdk
-        background: true
+      - name: Install Windows SDK 28000 Standalone
         shell: pwsh
         run: |
-          & "${env:ProgramFiles}\Microsoft Visual Studio\2022\Enterprise\Common7\Tools\vs_installer.exe" modify `
-              --installPath "${env:ProgramFiles}\Microsoft Visual Studio\2022\Enterprise" `
-              --add Microsoft.VisualStudio.Component.Windows11SDK.28000 `
-              --quiet --wait --norestart
+          $ErrorActionPreference = 'Stop'
+          Write-Host "Downloading Windows SDK 28000 installer..."
+          
+          $installerPath = "$env:TEMP\winsdk_setup.exe"
+          Invoke-WebRequest -Uri "https://go.microsoft.com/fwlink/?linkid=2376217" -OutFile $installerPath
+          
+          Write-Host "Installing Windows SDK..."
+          Start-Process -FilePath $installerPath -ArgumentList "/features", "+", "/q", "/norestart" -NoNewWindow -Wait
           
           $sdkPath = "${env:ProgramFiles(x86)}\Windows Kits\10\Include\10.0.28000.0"
           if (-not (Test-Path "$sdkPath\um")) {
-              throw "SDK 28000 headers still missing at $sdkPath\um"
+              throw "SDK headers still missing at $sdkPath\um"
           }
-                  
-
       - name: Install native build dependencies
         shell: pwsh
         run: |
