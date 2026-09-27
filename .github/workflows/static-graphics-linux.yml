@@ -79,13 +79,13 @@ jobs:
 
           sudo tee /usr/local/bin/clang << EOF
           #!/bin/sh
-          exec /usr/bin/clang --target=$TRIPLE -fuse-ld=lld --sysroot=$SYSROOT -isystem$CXX_INCLUDE_DIR -isystem$SYSROOT/usr/include/c++/10 "\$@"
+          exec /usr/bin/clang --target=$TRIPLE -fuse-ld=lld -Wno-unused-command-line-argument --sysroot=$SYSROOT -isystem$CXX_INCLUDE_DIR -isystem$SYSROOT/usr/include/c++/10 "\$@"
           EOF
           sudo chmod +x /usr/local/bin/clang
 
           sudo tee /usr/local/bin/clang++ << EOF
           #!/bin/sh
-          exec /usr/bin/clang++ --target=$TRIPLE -fuse-ld=lld --sysroot=$SYSROOT -isystem$CXX_INCLUDE_DIR -isystem$SYSROOT/usr/include/c++/10 "\$@"
+          exec /usr/bin/clang++ --target=$TRIPLE -fuse-ld=lld -Wno-unused-command-line-argument --sysroot=$SYSROOT -isystem$CXX_INCLUDE_DIR -isystem$SYSROOT/usr/include/c++/10 "\$@"
           EOF
           sudo chmod +x /usr/local/bin/clang++
 

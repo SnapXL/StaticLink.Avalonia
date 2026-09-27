@@ -91,18 +91,19 @@ jobs:
 
           ARCH_NAME=$(sudo cat "$SYSROOT/etc/apk/arch")
           TRIPLE="${ARCH_NAME}-alpine-linux-musl"
+          CXX_INCLUDE_DIR="$SYSROOT/usr/include/c++/14.2.0"
 
           sudo mkdir -p /usr/local/bin
           
           sudo tee /usr/local/bin/clang << EOF
           #!/bin/sh
-          exec /usr/bin/clang --target=$TRIPLE -fuse-ld=lld --sysroot="$SYSROOT" "\$@"
+          exec /usr/bin/clang --target=$TRIPLE -fuse-ld=lld -Wno-unused-command-line-argument --sysroot="$SYSROOT" -isystem$CXX_INCLUDE_DIR -isystem$SYSROOT/usr/include/c++/14.2.0 "\$@"
           EOF
           sudo chmod +x /usr/local/bin/clang
 
           sudo tee /usr/local/bin/clang++ << EOF
           #!/bin/sh
-          exec /usr/bin/clang++ --target=$TRIPLE -fuse-ld=lld --sysroot="$SYSROOT" "\$@"
+          exec /usr/bin/clang++ --target=$TRIPLE -fuse-ld=lld -Wno-unused-command-line-argument --sysroot="$SYSROOT" -isystem$CXX_INCLUDE_DIR -isystem$SYSROOT/usr/include/c++/14.2.0 "\$@"
           EOF
           sudo chmod +x /usr/local/bin/clang++
 
