@@ -180,7 +180,7 @@ jobs:
         if: ${{ !startsWith(matrix.rid, 'linux-musl-') }}
         run: |
           set -euo pipefail
-
+          
           package=""
           for f in artifacts/nuget/BrycensRanch.StaticLink.Avalonia.*.nupkg; do
             [ -e "$f" ] || continue
@@ -190,12 +190,12 @@ jobs:
             package="$f"
             break
           done
-
+          
           if [ -z "$package" ]; then
             echo "StaticLink NuGet package was not downloaded." >&2
             exit 1
           fi
-
+          
           name="${package##*/}"
           name="${name%.nupkg}"
           prefix="BrycensRanch.StaticLink.Avalonia."
@@ -206,20 +206,20 @@ jobs:
               exit 1
               ;;
           esac
-
+          
           avalonia_version="${{ matrix.avalonia_version }}"
           if [ -z "$avalonia_version" ]; then
             avalonia_version="12.1.3"
           fi
-
+          
           project_dir="$PWD/artifacts/avalonia-smoke-src"
-
+          
           ./scripts/create-avalonia-smoke.sh \
             --project-dir "$project_dir" \
-            --nuget-source "$(cd artifacts/nuget && pwd)" \
+            --nuget-source "../../artifacts/nuget" \
             --static-link-version "$version" \
             --avalonia-version "$avalonia_version"
-
+          
           dotnet publish "$project_dir/AvaloniaStaticLinkSmoke.csproj" \
             -c Release \
             -r "${{ matrix.rid }}" \
@@ -272,7 +272,7 @@ jobs:
             -v "${{ github.workspace }}:/workspace" \
             -w /workspace \
             "${{ env.DOTNET_ALPINE_IMAGE }}" \
-            sh -c "apk add --no-cache clang lld build-base zlib-dev fontconfig-dev gsettings-desktop-schemas && dotnet publish /workspace/artifacts/avalonia-smoke-src/AvaloniaStaticLinkSmoke.csproj -c Release -r ${{ matrix.rid }} --configfile /workspace/artifacts/avalonia-smoke-src/NuGet.config /p:PublishAot=true /p:SelfContained=true /p:PublishSingleFile=true /p:StripSymbols=true /p:PublishDir=/workspace/artifacts/smoke-${{ matrix.rid }}/"
+            sh -c "apk add --no-cache clang lld build-base zlib-dev fontconfig-dev && dotnet publish /workspace/artifacts/avalonia-smoke-src/AvaloniaStaticLinkSmoke.csproj -c Release -r ${{ matrix.rid }} --configfile /workspace/artifacts/avalonia-smoke-src/NuGet.config /p:PublishAot=true /p:SelfContained=true /p:PublishSingleFile=true /p:StripSymbols=true /p:PublishDir=/workspace/artifacts/smoke-${{ matrix.rid }}/"
       - name: Verify no dynamic graphics libraries remain
         shell: pwsh
         run: |
@@ -355,7 +355,7 @@ jobs:
             -v "${{ github.workspace }}:/workspace" \
             -w /workspace/artifacts/smoke-${{ matrix.rid }} \
             alpine:3.22 \
-            sh -c 'apk add --no-cache xvfb-run libstdc++ libgcc fontconfig freetype ttf-dejavu libx11 libxcb libxext libxrender libxi libxrandr libxcursor libxfixes libxinerama libice libsm mesa-gl mesa-egl && fc-cache -f && fc-match sans && chmod +x ./AvaloniaStaticLinkSmoke && timeout 15s xvfb-run -a ./AvaloniaStaticLinkSmoke || code=$?; if [ "${code:-0}" = 124 ] || [ "${code:-0}" = 143 ]; then echo "Avalonia musl smoke app stayed alive for 15 seconds."; exit 0; fi; exit "${code:-0}"'
+            sh -c 'apk add --no-cache xvfb-run gsettings-desktop-schemas libstdc++ libgcc fontconfig freetype ttf-dejavu libx11 libxcb libxext libxrender libxi libxrandr libxcursor libxfixes libxinerama libice libsm mesa-gl mesa-egl && fc-cache -f && fc-match sans && chmod +x ./AvaloniaStaticLinkSmoke && timeout 15s xvfb-run -a ./AvaloniaStaticLinkSmoke || code=$?; if [ "${code:-0}" = 124 ] || [ "${code:-0}" = 143 ]; then echo "Avalonia musl smoke app stayed alive for 15 seconds."; exit 0; fi; exit "${code:-0}"'
 
       - name: Run macOS Avalonia smoke app
         if: ${{ startsWith(matrix.rid, 'osx-') }}
@@ -560,6 +560,11 @@ jobs:
             wget -q "https://svn.exactcode.de/t2/tags/8.0/package/xorg/xorg-server/xvfb-run.sh"
             mv xvfb-run.sh /usr/local/bin/xvfb-run
             chmod +x /usr/local/bin/xvfb-run
+            sudo tee /usr/local/bin/mcookie << 'EOF'
+            #!/bin/sh
+            openssl rand -hex 16
+            EOF
+            sudo chmod +x /usr/local/bin/mcookie
           run: |
             set -e
             export DOTNET_OPENSSL_VERSION_OVERRIDE=35
