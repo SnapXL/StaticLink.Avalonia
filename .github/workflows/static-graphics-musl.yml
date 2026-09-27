@@ -92,7 +92,8 @@ jobs:
           ARCH_NAME=$(sudo cat "$SYSROOT/etc/apk/arch")
           TRIPLE="${ARCH_NAME}-alpine-linux-musl"
           CXX_INCLUDE_DIR="$SYSROOT/usr/include"
-          MACHINE_INCLUDE_DIR="$CXX_INCLUDE_DIR/c++/13.2.1/$TRIPLE"
+          CONFIG_H_PATH=$(sudo find "$SYSROOT/usr/include/c++/13.2.1" -name "c++config.h" | head -n 1)
+          MACHINE_INCLUDE_DIR=$(dirname $(dirname "$CONFIG_H_PATH"))
           sudo mkdir -p /usr/local/bin
           
           sudo tee /usr/local/bin/clang << EOF
