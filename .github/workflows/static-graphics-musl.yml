@@ -58,23 +58,23 @@ jobs:
         if: matrix.rid == 'linux-musl-arm'
         uses: docker/setup-qemu-action@v4
 
-      - name: Setup Alpine Linux 3.17 Sysroot
+      - name: Setup Alpine Linux 3.19 Sysroot
         run: |
           SYSROOT="/opt/alpine-sysroot-${{ matrix.rid }}"
           sudo mkdir -p "$SYSROOT"
           
           ALT_ARCH="${{ matrix.alpine_arch }}"
-          ALPINE_VERSION="3.17.9"
+          ALPINE_VERSION="3.19.9"
           TARBALL="alpine-minirootfs-$ALPINE_VERSION-$ALT_ARCH.tar.gz"
-          URL="https://dl-cdn.alpinelinux.org/alpine/v3.17/releases/$ALT_ARCH/$TARBALL"
+          URL="https://dl-cdn.alpinelinux.org/alpine/v3.19/releases/$ALT_ARCH/$TARBALL"
           
           curl -fSL "$URL" -o /tmp/$TARBALL
           sudo tar -xzf /tmp/$TARBALL -C "$SYSROOT"
           rm /tmp/$TARBALL
 
           sudo tee "$SYSROOT/etc/apk/repositories" << 'EOF'
-          https://dl-cdn.alpinelinux.org/alpine/v3.17/main
-          https://dl-cdn.alpinelinux.org/alpine/v3.17/community
+          https://dl-cdn.alpinelinux.org/alpine/v3.19/main
+          https://dl-cdn.alpinelinux.org/alpine/v3.19/community
           EOF
 
           sudo cp /etc/resolv.conf "$SYSROOT/etc/resolv.conf"
