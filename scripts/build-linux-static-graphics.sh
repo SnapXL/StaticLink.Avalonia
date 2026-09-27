@@ -35,6 +35,8 @@ OUTPUT_DIR="${OUTPUT_DIR:-$ROOT_DIR/External/NativeStatic/$RID}"
 SKIASHARP_VERSION="${SKIASHARP_VERSION:-4.154.0-preview.1}"
 BUILD_JOBS="${BUILD_JOBS:-$(nproc 2>/dev/null || echo 1)}"
 SKIA_DEPS_RETRIES="${SKIA_DEPS_RETRIES:-3}"
+CC="${CC:-clang}"
+CXX="${CXX:-clang++}"
 
 export DEPOT_TOOLS_METRICS=0
 export DEPOT_TOOLS_REPORT_BUILD=0
@@ -279,8 +281,8 @@ skia_use_system_zlib = false
 skia_use_vulkan = false
 skia_use_xps = false
 skia_use_partition_alloc = false
-cc = "clang"
-cxx = "clang++"
+cc = "$CC"
+cxx = "$CXX"
 ar = "llvm-ar"
 extra_cflags = [
   "-DSKIA_C_DLL",
