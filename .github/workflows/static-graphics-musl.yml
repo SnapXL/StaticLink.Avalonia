@@ -58,23 +58,23 @@ jobs:
         if: matrix.rid == 'linux-musl-arm'
         uses: docker/setup-qemu-action@v4
 
-      - name: Setup Alpine Linux 3.21 Sysroot
+      - name: Setup Alpine Linux 3.17 Sysroot
         run: |
           SYSROOT="/opt/alpine-sysroot-${{ matrix.rid }}"
           sudo mkdir -p "$SYSROOT"
           
           ALT_ARCH="${{ matrix.alpine_arch }}"
-          ALPINE_VERSION="3.21.8"
+          ALPINE_VERSION="3.17.9"
           TARBALL="alpine-minirootfs-$ALPINE_VERSION-$ALT_ARCH.tar.gz"
-          URL="https://dl-cdn.alpinelinux.org/alpine/v3.21/releases/$ALT_ARCH/$TARBALL"
+          URL="https://dl-cdn.alpinelinux.org/alpine/v3.17/releases/$ALT_ARCH/$TARBALL"
           
           curl -fSL "$URL" -o /tmp/$TARBALL
           sudo tar -xzf /tmp/$TARBALL -C "$SYSROOT"
           rm /tmp/$TARBALL
 
           sudo tee "$SYSROOT/etc/apk/repositories" << 'EOF'
-          https://dl-cdn.alpinelinux.org/alpine/v3.21/main
-          https://dl-cdn.alpinelinux.org/alpine/v3.21/community
+          https://dl-cdn.alpinelinux.org/alpine/v3.17/main
+          https://dl-cdn.alpinelinux.org/alpine/v3.17/community
           EOF
 
           sudo cp /etc/resolv.conf "$SYSROOT/etc/resolv.conf"
@@ -97,13 +97,13 @@ jobs:
           
           sudo tee /usr/local/bin/clang << EOF
           #!/bin/sh
-          exec /usr/bin/clang --target=$TRIPLE -fuse-ld=lld -Wno-unused-command-line-argument --sysroot="$SYSROOT" -isystem$CXX_INCLUDE_DIR -isystem$SYSROOT/usr/include/c++/14.2.0 "\$@"
+          exec /usr/bin/clang --target=$TRIPLE -fuse-ld=lld -Wno-unused-command-line-argument --sysroot="$SYSROOT" --gcc-toolchain=/nonexistent -isystem$CXX_INCLUDE_DIR -isystem$SYSROOT/usr/include/c++/14.2.0 "\$@"
           EOF
           sudo chmod +x /usr/local/bin/clang
 
           sudo tee /usr/local/bin/clang++ << EOF
           #!/bin/sh
-          exec /usr/bin/clang++ --target=$TRIPLE -fuse-ld=lld -Wno-unused-command-line-argument --sysroot="$SYSROOT" -isystem$CXX_INCLUDE_DIR -isystem$SYSROOT/usr/include/c++/14.2.0 "\$@"
+          exec /usr/bin/clang++ --target=$TRIPLE -fuse-ld=lld -Wno-unused-command-line-argument --sysroot="$SYSROOT" --gcc-toolchain=/nonexistent -isystem$CXX_INCLUDE_DIR -isystem$SYSROOT/usr/include/c++/14.2.0 "\$@"
           EOF
           sudo chmod +x /usr/local/bin/clang++
 
