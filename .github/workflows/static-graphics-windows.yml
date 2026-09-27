@@ -54,7 +54,9 @@ jobs:
           path: External/NativeStatic/.work
           key: native-work-windows-${{ matrix.rid }}-${{ inputs.skiasharp_version }}-${{ inputs.angle_branch }}-${{ hashFiles('External/NativeStatic/patches/*.patch', 'scripts/build-windows-static-graphics.ps1') }}
 
-      - name: Install Windows SDK 28000 Standalone
+      - name: Install Windows SDK 28000
+        id: install-sdk
+        background: true
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
