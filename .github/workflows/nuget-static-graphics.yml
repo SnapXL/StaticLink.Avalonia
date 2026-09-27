@@ -151,7 +151,7 @@ jobs:
 
       - name: Setup MSVC environment
         if: ${{ startsWith(matrix.rid, 'win-') }}
-        uses: ilammy/msvc-dev-cmd@v1
+        uses: TheMrMilchmann/setup-msvc-dev@v4
         with:
           arch: ${{ matrix.msvc_arch }}
 
