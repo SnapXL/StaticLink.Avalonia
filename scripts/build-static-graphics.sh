@@ -52,6 +52,7 @@ export DEPOT_TOOLS_REPORT_BUILD=0
 export DEPOT_TOOLS_UPDATE=0
 export PYTHONUNBUFFERED=1
 HARFBUZZ_COMMIT="${HARFBUZZ_COMMIT:-863d3f7787c6df18d20e4535c5906bf3eb803bd5}"
+ZLIB_COMMIT="${ZLIB_COMMIT:-456ae730017b9b4bd3371927abc82627fd51feef}"
 
 # Define default POSIX-compliant stubs for platform hooks
 platform_ensure_tools() { :; }
@@ -179,13 +180,14 @@ sync_skiasharp() {
 
 prepare_skia_git_sync_deps() {
   skia_dir="$1"
-python3 - "$skia_dir" "$HARFBUZZ_COMMIT" <<'PY'
+python3 - "$skia_dir" "$HARFBUZZ_COMMIT" "$ZLIB_COMMIT" <<'PY'
 import re
 import pathlib
 import sys
 
 skia_dir = pathlib.Path(sys.argv[1])
 harfbuzz_target = sys.argv[2]
+zlib_target = sys.argv[3]
 sync_deps_path = skia_dir / "tools" / "git-sync-deps"
 deps_path = skia_dir / "DEPS"
 
@@ -211,10 +213,17 @@ if deps_path.exists():
     # Dynamically update HarfBuzz hash using a callback function to avoid group reference errors
     def replace_harfbuzz(match):
         return match.group(1) + harfbuzz_target + match.group(2)
-        
+    def replace_zlib(match):
+        return match.group(1) + zlib_target + match.group(2)
+    
     deps = re.sub(
         r'(["\']third_party/externals/harfbuzz["\']\s*:\s*["\'][^@]+@)[^"\']+(["\'])',
         replace_harfbuzz,
+        deps
+    )
+    deps = re.sub(
+        r'(["\']third_party/externals/zlib["\']\s*:\s*["\'][^@]+@)[^"\']+(["\'])',
+        replace_zlib,
         deps
     )
     # Safely swap Google's proxy mirrors for GitHub-backed dependencies directly to github.com
