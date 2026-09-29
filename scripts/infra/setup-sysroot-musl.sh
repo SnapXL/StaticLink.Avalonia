@@ -38,15 +38,12 @@ sudo chroot "$SYSROOT" apk add --no-cache \
 ARCH_NAME="$(sudo cat "$SYSROOT/etc/apk/arch")"
 TRIPLE="${ARCH_NAME}-alpine-linux-musl"
 CXX_INCLUDE_DIR="$SYSROOT/usr/include"
-
-# Dynamically locate the C++ include directory and target-specific config header
-CONFIG_H_PATH="$(sudo find "$SYSROOT/usr/include" -name "c++config.h" | head -n 1)"
+CONFIG_H_PATH=$(find "$SYSROOT/usr/include/c++/13.2.1" -name "c++config.h" | head -n 1)
 if [ -z "$CONFIG_H_PATH" ]; then
   echo "Error: c++config.h not found in sysroot usr/include" >&2
   exit 1
 fi
-MACHINE_INCLUDE_DIR="$(dirname "$(dirname "$CONFIG_H_PATH")")"
-CXX_BASE_INCLUDE_DIR="$(dirname "$CONFIG_H_PATH")"
+MACHINE_INCLUDE_DIR=$(dirname $(dirname "$CONFIG_H_PATH"))
 
 sudo mkdir -p /usr/local/bin
 
@@ -57,13 +54,13 @@ fi
 
 sudo tee /usr/local/bin/clang > /dev/null << EOF
 #!/bin/sh
-exec /usr/bin/clang --target=$TRIPLE -fuse-ld=lld $EXTRA_FLAGS -Wno-unused-command-line-argument --sysroot="$SYSROOT" --gcc-toolchain=/nonexistent -isystem$CXX_BASE_INCLUDE_DIR -isystem$MACHINE_INCLUDE_DIR -isystem$CXX_INCLUDE_DIR "\$@"
+exec /usr/bin/clang --target=$TRIPLE -fuse-ld=lld $EXTRA_FLAGS -Wno-unused-command-line-argument --sysroot="$SYSROOT" --gcc-toolchain=/nonexistent -isystem$SYSROOT/usr/include/c++/13.2.1 -isystem$MACHINE_INCLUDE_DIR -isystem$CXX_INCLUDE_DIR "\$@"
 EOF
 sudo chmod +x /usr/local/bin/clang
 
 sudo tee /usr/local/bin/clang++ > /dev/null << EOF
 #!/bin/sh
-exec /usr/bin/clang++ --target=$TRIPLE -fuse-ld=lld $EXTRA_FLAGS -Wno-unused-command-line-argument --sysroot="$SYSROOT" --gcc-toolchain=/nonexistent -isystem$CXX_BASE_INCLUDE_DIR -isystem$MACHINE_INCLUDE_DIR -isystem$CXX_INCLUDE_DIR "\$@"
+exec /usr/bin/clang++ --target=$TRIPLE -fuse-ld=lld $EXTRA_FLAGS -Wno-unused-command-line-argument --sysroot="$SYSROOT" --gcc-toolchain=/nonexistent -isystem$SYSROOT/usr/include/c++/13.2.1 -isystem$MACHINE_INCLUDE_DIR -isystem$CXX_INCLUDE_DIR "\$@"
 EOF
 sudo chmod +x /usr/local/bin/clang++
 
