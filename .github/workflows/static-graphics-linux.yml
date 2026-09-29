@@ -64,7 +64,7 @@ jobs:
           key: native-work-linux-${{ matrix.rid }}-${{ inputs.skiasharp_version }}-${{ hashFiles('External/NativeStatic/patches/*.patch', 'scripts/build-linux-static-graphics.sh') }}
 
       - name: Build Linux static graphics libraries
-        run: scripts/build-linux-static-graphics.sh all
+        run: scripts/build-static-graphics.sh all
 
       - name: Upload Linux static archives
         uses: actions/upload-artifact@v4
