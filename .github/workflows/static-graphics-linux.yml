@@ -41,6 +41,7 @@ jobs:
       CXX: /usr/local/bin/clang++
       LLVM_AR: llvm-ar
     steps:
+      - uses: actions/checkout@v4
       - name: Install native build dependencies
         run: |
           sudo apt-get update
@@ -49,13 +50,11 @@ jobs:
       - name: Set up QEMU
         if: matrix.rid == 'linux-arm'
         uses: docker/setup-qemu-action@v4
-        
+
       - name: Setup Ubuntu 18.04 Sysroot
         env:
           UBUNTU_ARCH: ${{ matrix.ubuntu_arch }}
         run: scripts/infra/setup-sysroot-linux.sh
-
-      - uses: actions/checkout@v4
 
       - name: Restore native build cache
         uses: actions/cache@v4
