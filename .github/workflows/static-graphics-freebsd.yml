@@ -64,7 +64,7 @@ jobs:
           LD: ld.lld
           TARGET_OS: freebsd
         run: |
-          scripts/build-freebsd-static-graphics.sh all
+          scripts/build-static-graphics.sh all
 
       - name: Upload FreeBSD static archives
         uses: actions/upload-artifact@v4
