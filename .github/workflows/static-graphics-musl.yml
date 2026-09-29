@@ -76,7 +76,7 @@ jobs:
           LLVM_AR: llvm-ar
           DEPOT_TOOLS_BOOTSTRAP_PYTHON3: 0
           VPYTHON_BYPASS: "manually managed python not supported by chrome operations"
-        run: scripts/build-linux-static-graphics.sh all
+        run: scripts/build-static-graphics.sh all
 
       - name: Upload Linux musl static archives
         uses: actions/upload-artifact@v4
