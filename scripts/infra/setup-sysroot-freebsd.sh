@@ -40,9 +40,6 @@ exec /usr/bin/clang++ --target=$FREEBSD_TRIPLE --sysroot="$SYSROOT" -fuse-ld=lld
 EOF
 sudo chmod +x /usr/local/bin/clang++
 
-if [ -d "$SYSROOT/usr/include/fontconfig" ] && [ ! -e /usr/local/include/fontconfig ]; then
-  sudo mkdir -p /usr/local/include
-  sudo ln -s "$SYSROOT/usr/include/fontconfig" /usr/local/include/fontconfig
-fi
+sudo ln -s "$SYSROOT/usr/include/fontconfig" /usr/local/include/fontconfig
 
 echo "Successfully configured FreeBSD sysroot and compiler wrappers for $FREEBSD_TRIPLE."
