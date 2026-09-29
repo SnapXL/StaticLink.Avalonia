@@ -63,7 +63,7 @@ jobs:
           RID: ${{ matrix.rid }}
           TARGET_CPU: ${{ matrix.target_cpu }}
           ALPINE_ARCH: ${{ matrix.alpine_arch }}
-        run: scripts/infra/setup-sysroot-linux.sh
+        run: scripts/infra/setup-sysroot-musl.sh
 
       - name: Build Linux musl static graphics libraries
         env:
