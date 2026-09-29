@@ -97,8 +97,11 @@ ensure_tools() {
   require_cmd clang++
   require_cmd llvm-ar
   require_cmd ninja
-  require_cmd gn
-  require_cmd pkg-config
+  # GN is not typically pre-packaged via native package managers on Windows and macOS,
+  # but is provided automatically by depot_tools.
+  if [ "$TARGET_OS" != "windows" ] && [ "$TARGET_OS" != "macos" ]; then
+    require_cmd gn
+  fi
   platform_ensure_tools
 }
 
