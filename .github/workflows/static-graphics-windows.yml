@@ -86,7 +86,7 @@ jobs:
           TARGET_CPU: ${{ matrix.target_cpu }}
           DEPOT_TOOLS_WIN_TOOLCHAIN: 0
           GYP_MSVS_VERSION: 17.0
-        run: .\scripts\build-static-graphics.sh skia
+        run: ./scripts/build-static-graphics.sh skia
 
       - name: Wait for WinSDK
         wait: install-sdk
@@ -111,7 +111,7 @@ jobs:
           TARGET_CPU: ${{ matrix.target_cpu }}
           DEPOT_TOOLS_WIN_TOOLCHAIN: 0
           GYP_MSVS_VERSION: 17.0
-        run: .\scripts\build-static-graphics.sh angle
+        run: ./scripts/build-static-graphics.sh angle
 
       - name: Upload Windows static archives
         uses: actions/upload-artifact@v4
