@@ -50,37 +50,12 @@ jobs:
           sudo apt-get install -y clang lld llvm ninja-build curl xz-utils pkg-config python3 gn libfontconfig1-dev
 
       - name: Setup FreeBSD Sysroot
-        run: |
-          SYSROOT="/opt/freebsd-sysroot-${{ matrix.rid }}"
-          sudo mkdir -p "$SYSROOT"
-          
-          RELEASE="14.5"
-          DIR="${{ matrix.freebsd_dir }}"
-          
-          # Download FreeBSD base system
-          curl -fSL "https://download.freebsd.org/releases/${DIR}/${RELEASE}-RELEASE/base.txz" -o /tmp/base.txz || \
-          curl -fSL "https://archive.freebsd.org/old-releases/${DIR}/${RELEASE}-RELEASE/base.txz" -o /tmp/base.txz
-          
-          sudo tar -xJf /tmp/base.txz -C "$SYSROOT" \
-            ./usr/include \
-            ./usr/lib \
-            ./lib
-          rm /tmp/base.txz
+        env:
+          RID: ${{ matrix.rid }}
+          FREEBSD_DIR: ${{ matrix.freebsd_dir }}
+          FREEBSD_TRIPLE: ${{ matrix.target_triple }}
+        run: scripts/infra/setup-sysroot-freebsd.sh
 
-          sudo mkdir -p /usr/local/bin
-          
-          sudo tee /usr/local/bin/clang << EOF
-          #!/bin/sh
-          exec /usr/bin/clang --target=$FREEBSD_TRIPLE --sysroot="$SYSROOT" -fuse-ld=lld -Wno-unused-command-line-argument "\$@"
-          EOF
-          sudo chmod +x /usr/local/bin/clang
-
-          sudo tee /usr/local/bin/clang++ << EOF
-          #!/bin/sh
-          exec /usr/bin/clang++ --target=$FREEBSD_TRIPLE --sysroot="$SYSROOT" -fuse-ld=lld -Wno-unused-command-line-argument "\$@"
-          EOF
-          sudo chmod +x /usr/local/bin/clang++
-          sudo ln -s /usr/include/fontconfig /usr/local/include/fontconfig
       - name: Build FreeBSD static graphics libraries
         env:
           CC: clang
