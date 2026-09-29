@@ -26,8 +26,8 @@ if [ -z "${TARGET_OS:-}" ]; then
   case "$(uname -s)" in
     Linux*)   TARGET_OS="linux" ;;
     FreeBSD*) TARGET_OS="freebsd" ;;
-    Darwin*)  TARGET_OS="macos" ;;
-    CYGWIN*|MINGW*|MSYS*) TARGET_OS="windows" ;;
+    Darwin*)  TARGET_OS="mac" ;;
+    CYGWIN*|MINGW*|MSYS*) TARGET_OS="win" ;;
     *)        TARGET_OS="linux" ;;
   esac
 fi
@@ -100,7 +100,7 @@ ensure_tools() {
   require_cmd ninja
   # GN is not typically pre-packaged via native package managers on Windows and macOS,
   # but is provided automatically by depot_tools.
-  if [ "$TARGET_OS" != "windows" ] && [ "$TARGET_OS" != "macos" ]; then
+  if [ "$TARGET_OS" != "win" ] && [ "$TARGET_OS" != "mac" ]; then
     require_cmd gn
   fi
   platform_ensure_tools
@@ -349,7 +349,7 @@ EOF_ARGS
 }
 
 build_angle() {
-  if [ "$TARGET_OS" != "windows" ]; then
+  if [ "$TARGET_OS" != "win" ]; then
     echo "Error: This script is only configured to build ANGLE on Windows. ANGLE is only used on Windows in Avalonia apps." >&2
     exit 1
   fi
