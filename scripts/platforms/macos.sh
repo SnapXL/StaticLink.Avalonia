@@ -2,7 +2,7 @@
 
 set -eu
 
-REPO_ROOT="${REPO_ROOT:-$(cd "$(dirname "$0")/.." && pwd)}"
+REPO_ROOT="${REPO_ROOT:-$(cd "$(dirname "$0")/../.." && pwd)}"
 
 build_macos_avalonia_native() {
     rid="${RID:-osx-arm64}"
