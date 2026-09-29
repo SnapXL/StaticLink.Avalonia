@@ -557,14 +557,6 @@ jobs:
             export DOTNET_ROOT=$HOME/dotnet
             export PATH=$HOME/dotnet:$PATH
             dotnet --info
-            wget -q "https://svn.exactcode.de/t2/tags/8.0/package/xorg/xorg-server/xvfb-run.sh"
-            mv xvfb-run.sh /usr/local/bin/xvfb-run
-            chmod +x /usr/local/bin/xvfb-run
-            tee /usr/local/bin/mcookie << 'EOF'
-            #!/bin/sh
-            openssl rand -hex 16
-            EOF
-            chmod +x /usr/local/bin/mcookie
           run: |
             set -e
             export DOTNET_OPENSSL_VERSION_OVERRIDE=35
@@ -601,7 +593,7 @@ jobs:
 
             cd "$PUBLISH_DIR"
             chmod +x ./AvaloniaStaticLinkSmoke
-            timeout 15s xvfb-run -a ./AvaloniaStaticLinkSmoke || code=$?
+            timeout 15s "$GITHUB_WORKSPACE/scripts/infra/freebsd-xvfb-run.sh" -a ./AvaloniaStaticLinkSmoke || code=$?
             if [ "${code:-0}" = "124" ] || [ "${code:-0}" = "143" ]; then
               echo "Avalonia FreeBSD smoke app stayed alive for 15 seconds."
               exit 0
