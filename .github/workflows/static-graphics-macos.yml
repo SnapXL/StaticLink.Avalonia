@@ -40,7 +40,7 @@ jobs:
           key: native-work-macos-${{ matrix.rid }}-${{ inputs.skiasharp_version }}-${{ hashFiles('External/NativeStatic/patches/*.patch', 'scripts/build-macos-static-graphics.sh') }}
 
       - name: Install native build dependencies
-        run: brew install ninja
+        run: brew install ninja llvm
 
       - name: Install Xcode Metal toolchain
         run: |
