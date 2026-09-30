@@ -324,7 +324,11 @@ build_skia() {
   else
     extra_cflags_cc='[ "-frtti", "-Wno-psabi" ]'
   fi
-
+  if [ "$TARGET_OS" = "linux" ] || [ "$TARGET_OS" = "freebsd" ]; then
+    skia_use_fontconfig="true"
+  else
+    skia_use_fontconfig="false"
+  fi
   cat >"$out_dir/args.gn" <<EOF_ARGS
 target_os = "$TARGET_OS"
 target_cpu = "$TARGET_CPU"
@@ -336,7 +340,7 @@ skia_enable_graphite = false
 skia_enable_pdf = false
 skia_enable_skottie = false
 skia_use_dng_sdk = false
-skia_use_fontconfig = true
+skia_use_fontconfig = $skia_use_fontconfig
 skia_use_freetype = true
 skia_use_harfbuzz = false
 skia_use_icu = false
