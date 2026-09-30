@@ -120,7 +120,7 @@ ensure_depot_tools() {
   if [ "$TARGET_OS" = "win" ]; then
     export PATH="$depot_dir:$PATH"
     if [ ! -f "$depot_dir/python3_bin_reldir.txt" ]; then
-      python3 "$depot_dir/ensure_bootstrap" || "$depot_dir/ensure_bootstrap"
+      bash "$depot_dir/ensure_bootstrap"
     fi
   elif [ "$TARGET_OS" = "mac" ]; then
     export PATH="$python_bin_dir:$depot_dir:$PATH"
