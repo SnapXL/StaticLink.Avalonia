@@ -117,7 +117,9 @@ ensure_depot_tools() {
   fi
   initialize_depot_tools_system_python "$depot_dir"
   patch_depot_tools_python_deps "$depot_dir"
-  export PATH="$PATH:$python_bin_dir:$depot_dir"
+  if [ "$TARGET_OS" = "win" ] || [ "$TARGET_OS" = "mac" ]; then
+      export PATH="$python_bin_dir:$depot_dir:$PATH"
+  fi
 }
 
 initialize_depot_tools_system_python() {
