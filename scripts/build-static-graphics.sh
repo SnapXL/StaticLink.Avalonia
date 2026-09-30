@@ -46,7 +46,7 @@ BUILD_JOBS="${BUILD_JOBS:-$(nproc 2>/dev/null || echo 1)}"
 SKIA_DEPS_RETRIES="${SKIA_DEPS_RETRIES:-3}"
 CC="${CC:-clang}"
 CXX="${CXX:-clang++}"
-AR="${CXX:-llvm-ar}"
+AR="${AR:-llvm-ar}"
 
 export DEPOT_TOOLS_METRICS=0
 export DEPOT_TOOLS_REPORT_BUILD=0
