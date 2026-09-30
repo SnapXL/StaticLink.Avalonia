@@ -135,6 +135,7 @@ initialize_depot_tools_system_python() {
   python_bin_dir="$(dirname "$(command -v python3)")"
   
   if command -v cygpath >/dev/null 2>&1; then
+    depot_dir="$(cygpath -u "$depot_dir")"
     python_bin_dir="$(cygpath -u "$python_bin_dir")"
   fi
 
