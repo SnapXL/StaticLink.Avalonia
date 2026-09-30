@@ -112,7 +112,7 @@ ensure_depot_tools() {
   depot_dir="$WORK_DIR/depot_tools"
   
   if [ ! -d "$depot_dir/.git" ]; then
-    git clone --depth 1 https://chromium.googlesource.com/chromium/tools/depot_tools.git "$depot_dir"
+    git clone --depth 1 --branch main https://github.com/ANaCiSkE/depot_tools_mirror "$depot_dir"
   else
     git -C "$depot_dir" pull --ff-only
   fi
