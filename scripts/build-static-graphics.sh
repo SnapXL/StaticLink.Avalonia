@@ -133,11 +133,6 @@ ensure_depot_tools() {
 initialize_depot_tools_system_python() {
   depot_dir="$1"
   python_bin_dir="$(dirname "$(command -v python3)")"
-  
-  if command -v cygpath >/dev/null 2>&1; then
-    depot_dir="$(cygpath -u "$depot_dir")"
-    python_bin_dir="$(cygpath -u "$python_bin_dir")"
-  fi
 
   if [ -d "$depot_dir" ]; then
     python3 - "$depot_dir" "$python_bin_dir" <<'PY'
@@ -148,11 +143,18 @@ import sys
 depot_dir = pathlib.Path(sys.argv[1]).resolve()
 python_bin_dir = pathlib.Path(sys.argv[2]).resolve()
 marker = depot_dir / "python3_bin_reldir.txt"
+
 try:
+    # This works if they are on the same drive
     rel_path = os.path.relpath(python_bin_dir, depot_dir)
     marker.write_text(rel_path + "\n")
 except ValueError:
-    marker.write_text(str(python_bin_dir) + "\n")
+    # If on different drives on Windows, depot_tools' python wrapper 
+    # cannot use a relative path. We must write a forward-slash absolute path 
+    # or handle it differently. Actually, let's use relative traversal or 
+    # force absolute path with forward slashes so it doesn't break bash.
+    abs_path = python_bin_dir.as_posix()
+    marker.write_text(abs_path + "\n")
 PY
   fi
 }
