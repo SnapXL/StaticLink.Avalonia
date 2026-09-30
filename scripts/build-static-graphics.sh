@@ -369,16 +369,30 @@ EOF_ARGS
 
   (cd "$skia_dir" && "$GN" gen "$out_dir")
   ninja -C "$out_dir" -j "$BUILD_JOBS" skia SkiaSharp HarfBuzzSharp
+  
+  if [ "$TARGET_OS" = "win" ]; then
+    lib_ext="lib"
+  else
+    lib_ext="a"
+  fi
+  
+  copy_first_existing "$OUTPUT_DIR/libskia.$lib_ext" \
+    "$out_dir/libskia.$lib_ext" \
+    "$out_dir/obj/libskia.$lib_ext" \
+    "$out_dir/skia.$lib_ext" \
+    "$out_dir/obj/skia.$lib_ext"
 
-  copy_first_existing "$OUTPUT_DIR/libskia.a" \
-    "$out_dir/libskia.a" \
-    "$out_dir/obj/libskia.a"
-  copy_first_existing "$OUTPUT_DIR/libSkiaSharp.a" \
-    "$out_dir/libSkiaSharp.a" \
-    "$out_dir/obj/libSkiaSharp.a"
-  copy_first_existing "$OUTPUT_DIR/libHarfBuzzSharp.a" \
-    "$out_dir/libHarfBuzzSharp.a" \
-    "$out_dir/obj/libHarfBuzzSharp.a"
+  copy_first_existing "$OUTPUT_DIR/libSkiaSharp.$lib_ext" \
+    "$out_dir/libSkiaSharp.$lib_ext" \
+    "$out_dir/obj/libSkiaSharp.$lib_ext" \
+    "$out_dir/SkiaSharp.$lib_ext" \
+    "$out_dir/obj/SkiaSharp.$lib_ext"
+
+  copy_first_existing "$OUTPUT_DIR/libHarfBuzzSharp.$lib_ext" \
+    "$out_dir/libHarfBuzzSharp.$lib_ext" \
+    "$out_dir/obj/libHarfBuzzSharp.$lib_ext" \
+    "$out_dir/HarfBuzzSharp.$lib_ext" \
+    "$out_dir/obj/HarfBuzzSharp.$lib_ext"
 }
 
 build_angle() {
