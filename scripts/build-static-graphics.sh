@@ -119,6 +119,9 @@ ensure_depot_tools() {
   patch_depot_tools_python_deps "$depot_dir"
   if [ "$TARGET_OS" = "win" ] || [ "$TARGET_OS" = "mac" ]; then
       export PATH="$python_bin_dir:$depot_dir:$PATH"
+      if [ ! -f "$depot_dir/python3_bin_reldir.txt" ]; then
+        "$depot_dir/ensure_bootstrap"
+      fi
   fi
 }
 
@@ -277,11 +280,18 @@ PY
 
 sync_skia_deps() {
   skia_dir="$1/externals/skia"
-  prepare_skia_git_sync_deps "$skia_dir"
-  platform_apply_skia_patches "$skia_dir"
+  
+  if [ "$TARGET_OS" = "win" ] && command -v cygpath >/dev/null 2>&1; then
+    skia_dir_normalized="$(cygpath -w "$skia_dir")"
+  else
+    skia_dir_normalized="$skia_dir"
+  fi
+  
+  prepare_skia_git_sync_deps "$skia_dir_normalized"
+  platform_apply_skia_patches "$skia_dir_normalized"
   attempt=1
   while [ "$attempt" -le "$SKIA_DEPS_RETRIES" ]; do
-    if python3 "$skia_dir/tools/git-sync-deps"; then
+    if python3 "$skia_dir_normalized/tools/git-sync-deps"; then
       return 0
     fi
     if [ "$attempt" -eq "$SKIA_DEPS_RETRIES" ]; then
