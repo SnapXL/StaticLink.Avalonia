@@ -37,6 +37,8 @@ jobs:
     env:
       SKIASHARP_VERSION: ${{ inputs.skiasharp_version }}
       ANGLE_BRANCH: ${{ inputs.angle_branch }}
+      CC: clang-cl
+      CXX: clang-cl
     steps:
       - uses: actions/checkout@v4
       - name: Exclude Workspace from Windows Defender
