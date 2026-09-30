@@ -320,7 +320,7 @@ build_skia() {
     GN="$skia_dir/bin/gn"
   fi
   if [ "$TARGET_OS" = "win" ]; then
-    extra_cflags_cc='[ "-frtti" ]'
+    extra_cflags_cc='[]'
   else
     extra_cflags_cc='[ "-frtti", "-Wno-psabi" ]'
   fi
