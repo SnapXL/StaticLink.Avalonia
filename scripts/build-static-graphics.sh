@@ -319,7 +319,11 @@ build_skia() {
   if { [ "$TARGET_OS" = "win" ] || [ "$TARGET_OS" = "mac" ]; } && [ "$GN" = "gn" ]; then
     GN="$skia_dir/bin/gn"
   fi
-
+  if [ "$TARGET_OS" = "win" ]; then
+    extra_cflags_cc='[ "-frtti" ]'
+  else
+    extra_cflags_cc='[ "-frtti", "-Wno-psabi" ]'
+  fi
 
   cat >"$out_dir/args.gn" <<EOF_ARGS
 target_os = "$TARGET_OS"
@@ -354,7 +358,7 @@ extra_cflags = [
   "-DHAVE_SYSCALL_GETRANDOM",
   "-DXML_DEV_URANDOM",
 ]
-extra_cflags_cc = [ "-frtti", "-Wno-psabi" ]
+extra_cflags_cc = $extra_cflags_cc
 extra_ldflags = []
 $EXTRA_GN_ARGS
 EOF_ARGS
