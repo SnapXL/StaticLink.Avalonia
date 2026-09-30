@@ -41,7 +41,7 @@ jobs:
       CXX: /usr/local/bin/clang++
       LLVM_AR: llvm-ar
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Install native build dependencies
         run: |
           sudo apt-get update
@@ -49,7 +49,7 @@ jobs:
 
       - name: Set up QEMU
         if: matrix.rid == 'linux-arm'
-        uses: docker/setup-qemu-action@v4
+        uses: docker/setup-qemu-action@99012661954931238ded8c8b007157a8430204e1 # v4.4.0
 
       - name: Setup Ubuntu 18.04 Sysroot
         env:
@@ -57,7 +57,7 @@ jobs:
         run: scripts/infra/setup-sysroot-linux.sh
 
       - name: Restore native build cache
-        uses: actions/cache@v4
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: External/NativeStatic/.work
           key: native-work-linux-${{ matrix.rid }}-${{ inputs.skiasharp_version }}-${{ hashFiles('External/NativeStatic/patches/*.patch', 'scripts/build-linux-static-graphics.sh') }}
@@ -66,7 +66,7 @@ jobs:
         run: scripts/build-static-graphics.sh all
 
       - name: Upload Linux static archives
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: native-static-${{ matrix.rid }}
           path: External/NativeStatic/${{ matrix.rid }}/*

@@ -40,7 +40,7 @@ jobs:
       CC: clang-cl
       CXX: clang-cl
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Exclude Workspace from Windows Defender
         shell: powershell
         run: |
@@ -51,7 +51,7 @@ jobs:
               Write-Host "Note: Defender exclusion skipped or restricted on this runner type: $_"
           }
       - name: Restore native build cache
-        uses: actions/cache@v4
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: External/NativeStatic/.work
           key: native-work-windows-${{ matrix.rid }}-${{ inputs.skiasharp_version }}-${{ inputs.angle_branch }}-${{ hashFiles('External/NativeStatic/patches/*.patch', 'scripts/build-windows-static-graphics.ps1') }}
@@ -94,7 +94,7 @@ jobs:
         wait: install-sdk
 
       - name: Setup MSVC environment
-        uses: TheMrMilchmann/setup-msvc-dev@v4
+        uses: TheMrMilchmann/setup-msvc-dev@368ef7d1ee4d1171b31d4a7f67f4d954f903f5a9 # v4.1.0
         with:
           arch: ${{ matrix.msvc_arch }}
           sdk: 10.0.28000.0
@@ -116,7 +116,7 @@ jobs:
         run: ./scripts/build-static-graphics.sh angle
 
       - name: Upload Windows static archives
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: native-static-${{ matrix.rid }}
           path: External/NativeStatic/${{ matrix.rid }}/*

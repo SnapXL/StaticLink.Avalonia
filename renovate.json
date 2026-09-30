@@ -1,0 +1,33 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended", ":semanticCommitTypeAll(build)"],
+  "prCreation": "not-pending",
+  "semanticCommits": "enabled",
+  "automerge": true,
+  "labels": ["dependencies"],
+  "automergeSchedule": ["before 8am every weekday"],
+  "rebaseWhen": "conflicted",
+  "prConcurrentLimit": 5,
+  "prHourlyLimit": 2,
+  "prNotPendingHours": 1,
+  "branchConcurrentLimit": 5,
+  "branchPrefix": "dep/",
+  "branchPrefixOld": "renovate/",
+  "minimumReleaseAge": "8 hours",
+  "timezone": "America/New_York",
+  "packageRules": [
+    {
+      "matchDepTypes": ["action"],
+      "labels": ["actions"],
+      "minimumReleaseAge": "2 days"
+    },
+    {
+      "matchDepNames": [".*[Dd]otnet.*", "*dotnet*", "Microsoft.Extensions*", "Microsoft.Data*"],
+      "minimumReleaseAge": "4 days"
+    },
+    {
+      "matchDepNames": ["dotnet-sdk"],
+      "enabled": false
+    },
+  ]
+}
