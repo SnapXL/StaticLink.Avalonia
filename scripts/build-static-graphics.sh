@@ -119,6 +119,7 @@ ensure_depot_tools() {
   patch_depot_tools_python_deps "$depot_dir"
   if [ "$TARGET_OS" = "win" ]; then
     export PATH="$depot_dir:$PATH"
+    export DEPOT_TOOLS_UPDATE=1
     if [ ! -f "$depot_dir/python3_bin_reldir.txt" ]; then
       bash "$depot_dir/ensure_bootstrap"
     fi
