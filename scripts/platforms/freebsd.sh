@@ -2,7 +2,7 @@
 
 set -eu
 
-apply_platform_skia_patches() {
+platform_apply_skia_patches() {
     skia_dir="$1"
     sync_deps="$skia_dir/tools/git-sync-deps"
 
