@@ -51,6 +51,8 @@ EOF
 }
 
 platform_build_angle() {
+    export GIT_CACHE_PATH=""
+    
     ensure_tools
     ensure_depot_tools
     src="$(sync_angle)"
