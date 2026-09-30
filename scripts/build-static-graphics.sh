@@ -117,13 +117,18 @@ ensure_depot_tools() {
     git -C "$depot_dir" pull --ff-only
   fi
   patch_depot_tools_python_deps "$depot_dir"
-  if [ "$TARGET_OS" = "win" ] || [ "$TARGET_OS" = "mac" ]; then
-      export PATH="$python_bin_dir:$depot_dir:$PATH"
-      if [ ! -f "$depot_dir/python3_bin_reldir.txt" ]; then
-        "$depot_dir/ensure_bootstrap"
-      fi
+  if [ "$TARGET_OS" = "win" ]; then
+    export PATH="$depot_dir:$PATH"
+    if [ ! -f "$depot_dir/python3_bin_reldir.txt" ]; then
+      python3 "$depot_dir/ensure_bootstrap" || "$depot_dir/ensure_bootstrap"
+    fi
+  elif [ "$TARGET_OS" = "mac" ]; then
+    export PATH="$python_bin_dir:$depot_dir:$PATH"
+    if [ ! -f "$depot_dir/python3_bin_reldir.txt" ]; then
+      "$depot_dir/ensure_bootstrap"
+    fi
   else
-      initialize_depot_tools_system_python "$depot_dir"
+    initialize_depot_tools_system_python "$depot_dir"
   fi
 }
 
