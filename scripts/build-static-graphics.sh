@@ -47,6 +47,7 @@ SKIA_DEPS_RETRIES="${SKIA_DEPS_RETRIES:-3}"
 CC="${CC:-clang}"
 CXX="${CXX:-clang++}"
 AR="${AR:-llvm-ar}"
+GN="${GN:-gn}"
 
 export DEPOT_TOOLS_METRICS=0
 export DEPOT_TOOLS_REPORT_BUILD=0
@@ -115,13 +116,14 @@ ensure_depot_tools() {
   else
     git -C "$depot_dir" pull --ff-only
   fi
-  initialize_depot_tools_system_python "$depot_dir"
   patch_depot_tools_python_deps "$depot_dir"
   if [ "$TARGET_OS" = "win" ] || [ "$TARGET_OS" = "mac" ]; then
       export PATH="$python_bin_dir:$depot_dir:$PATH"
       if [ ! -f "$depot_dir/python3_bin_reldir.txt" ]; then
         "$depot_dir/ensure_bootstrap"
       fi
+  else
+      initialize_depot_tools_system_python "$depot_dir"
   fi
 }
 
@@ -191,7 +193,7 @@ sync_skiasharp() {
 
 prepare_skia_git_sync_deps() {
   skia_dir="$1"
-python3 - "$skia_dir" "$HARFBUZZ_COMMIT" "$ZLIB_COMMIT" <<'PY'
+python3 - "$skia_dir" "$HARFBUZZ_COMMIT" "$ZLIB_COMMIT" "$TARGET_OS" <<'PY'
 import re
 import pathlib
 import sys
@@ -199,6 +201,7 @@ import sys
 skia_dir = pathlib.Path(sys.argv[1])
 harfbuzz_target = sys.argv[2]
 zlib_target = sys.argv[3]
+target_os = sys.argv[4]
 sync_deps_path = skia_dir / "tools" / "git-sync-deps"
 deps_path = skia_dir / "DEPS"
 
@@ -214,9 +217,9 @@ if deps_path.exists():
         "spirv-cross",
         "vulkanmemoryallocator",
         "vulkan-headers",
-        "d3d12allocator",
     ]
-    
+    if target_os != "win":
+            unused_deps.append("d3d12allocator")
     for dep in unused_deps:
         pattern = rf'^\s*["\']third_party/externals/{dep}["\']\s*:\s*[^,\n]+,\s*\n'
         deps = re.sub(pattern, '', deps, flags=re.MULTILINE)
@@ -313,6 +316,10 @@ build_skia() {
   mkdir -p "$out_dir" "$OUTPUT_DIR"
 
   EXTRA_GN_ARGS="$(platform_get_gn_args)"
+  if { [ "$TARGET_OS" = "win" ] || [ "$TARGET_OS" = "mac" ]; } && [ "$GN" = "gn" ]; then
+    GN="$skia_dir/bin/gn"
+  fi
+
 
   cat >"$out_dir/args.gn" <<EOF_ARGS
 target_os = "$TARGET_OS"
@@ -352,7 +359,7 @@ extra_ldflags = []
 $EXTRA_GN_ARGS
 EOF_ARGS
 
-  (cd "$skia_dir" && gn gen "$out_dir")
+  (cd "$skia_dir" && "$GN" gen "$out_dir")
   ninja -C "$out_dir" -j "$BUILD_JOBS" skia SkiaSharp HarfBuzzSharp
 
   copy_first_existing "$OUTPUT_DIR/libskia.a" \
