@@ -4,6 +4,11 @@ set -eu
 
 platform_ensure_tools() {
   git config --global core.longpaths true
+  if [ -d "C:/Program Files/Git/bin" ]; then
+      export PATH="C:/Program Files/Git/bin;C:/Program Files/Git/cmd:$PATH"
+  elif [ -d "C:/Program Files/Git/cmd" ]; then
+      export PATH="C:/Program Files/Git/cmd:$PATH"
+  fi
 }
 
 sync_angle() {
