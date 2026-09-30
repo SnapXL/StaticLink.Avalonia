@@ -41,8 +41,7 @@ jobs:
 
       - name: Install native build dependencies
         run: |
-          brew install ninja llvm
-          echo "/opt/homebrew/opt/llvm/bin" >> $GITHUB_PATH
+          brew install ninja
 
       - name: Install Xcode Metal toolchain
         run: |
@@ -58,6 +57,8 @@ jobs:
           xcrun metal -c /tmp/staticlink-metal-check.metal -o /tmp/staticlink-metal-check.air >/dev/null
 
       - name: Build macOS static graphics libraries
+        env:
+          AR: ar
         run: bash ./scripts/build-static-graphics.sh all
 
       - name: Upload macOS static archives
