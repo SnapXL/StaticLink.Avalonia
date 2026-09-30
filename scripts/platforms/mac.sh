@@ -71,6 +71,38 @@ build_macos_avalonia_native() {
 
     cp "$candidate" "$output_dir/libAvaloniaNative.a"
     echo "Wrote $output_dir/libAvaloniaNative.a"
+
+    echo "Compiling macos_font_preinit.m..."
+    preinit_src="$work_dir/macos_font_preinit.m"
+    cat > "$preinit_src" <<'OBJC'
+#import <AppKit/AppKit.h>
+#import <objc/message.h>
+#import <objc/runtime.h>
+
+__attribute__((constructor(101)))
+static void StaticLinkAvaloniaPreinitializeAppKitFonts(void)
+{
+    @autoreleasepool
+    {
+        [NSApplication sharedApplication];
+        [NSFont systemFontOfSize:13.0];
+        ((id (*)(id, SEL, CGFloat, CGFloat))objc_msgSend)([NSFont class], sel_registerName("systemFontOfSize:width:"), 13.0, 0.0);
+    }
+}
+OBJC
+
+    clang -arch "$arch" \
+        -mmacosx-version-min=10.13 \
+        -fobjc-arc \
+        -c "$preinit_src" \
+        -o "$output_dir/macos_font_preinit.o"
+
+    rm -f "$preinit_src"
+    echo "Wrote $output_dir/macos_font_preinit.o"
+}
+
+platform_get_gn_args() {
+  echo "min_macos_version = \"10.13\""
 }
 
 case "$(basename "$0")" in

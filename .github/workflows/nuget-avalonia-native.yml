@@ -97,10 +97,7 @@ jobs:
           dotnet-version: "10.0.x"
 
       - name: Build static AvaloniaNative
-        run: bash scripts/build-macos-avalonia-native-static.sh
-
-      - name: Build macOS font preinit object
-        run: bash scripts/build-macos-font-preinit.sh
+        run: bash scripts/platforms/mac.sh
 
       - name: Upload static AvaloniaNative
         uses: actions/upload-artifact@v4
