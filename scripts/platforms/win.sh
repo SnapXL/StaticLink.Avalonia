@@ -48,15 +48,6 @@ angle_static_library("libGLESv2_static") {'''
     with open(build_file, 'w', encoding='utf-8', newline='') as f:
         f.write(build_text)
 EOF
-
-    patch="$ANGLE_PATCH_DIR/angle-chromium-$ANGLE_BRANCH.patch"
-    deps_file="$src/DEPS"
-    if [ -f "$patch" ] && grep -q "'third_party/catapult'" "$deps_file"; then
-        if ! git -C "$src" apply "$patch"; then
-            echo "Failed to apply ANGLE patch: $patch" >&2
-            exit 1
-        fi
-    fi
 }
 
 platform_build_angle() {
