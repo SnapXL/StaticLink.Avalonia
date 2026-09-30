@@ -133,6 +133,11 @@ ensure_depot_tools() {
 initialize_depot_tools_system_python() {
   depot_dir="$1"
   python_bin_dir="$(dirname "$(command -v python3)")"
+  
+  if command -v cygpath >/dev/null 2>&1; then
+    python_bin_dir="$(cygpath -u "$python_bin_dir")"
+  fi
+
   if [ -d "$depot_dir" ]; then
     python3 - "$depot_dir" "$python_bin_dir" <<'PY'
 import os
@@ -146,7 +151,6 @@ try:
     rel_path = os.path.relpath(python_bin_dir, depot_dir)
     marker.write_text(rel_path + "\n")
 except ValueError:
-    # Fallback to absolute path if paths reside on different Windows drives (e.g. C: vs D:)
     marker.write_text(str(python_bin_dir) + "\n")
 PY
   fi
