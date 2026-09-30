@@ -2,6 +2,10 @@
 
 set -eu
 
+platform_ensure_tools() {
+  git config --global core.longpaths true
+}
+
 sync_angle() {
     src="$WORK_DIR/ANGLE-$ANGLE_BRANCH"
     if [ ! -d "$src/.git" ]; then
