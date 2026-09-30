@@ -46,6 +46,7 @@ BUILD_JOBS="${BUILD_JOBS:-$(nproc 2>/dev/null || echo 1)}"
 SKIA_DEPS_RETRIES="${SKIA_DEPS_RETRIES:-3}"
 CC="${CC:-clang}"
 CXX="${CXX:-clang++}"
+AR="${CXX:-llvm-ar}"
 
 export DEPOT_TOOLS_METRICS=0
 export DEPOT_TOOLS_REPORT_BUILD=0
@@ -96,7 +97,7 @@ ensure_tools() {
   require_cmd python3
   require_cmd clang
   require_cmd clang++
-  require_cmd llvm-ar
+  require_cmd "$AR"
   require_cmd ninja
   # GN is not typically pre-packaged via native package managers on Windows and macOS,
   # but is provided automatically by depot_tools.
@@ -131,7 +132,12 @@ import sys
 depot_dir = pathlib.Path(sys.argv[1]).resolve()
 python_bin_dir = pathlib.Path(sys.argv[2]).resolve()
 marker = depot_dir / "python3_bin_reldir.txt"
-marker.write_text(os.path.relpath(python_bin_dir, depot_dir) + "\n")
+try:
+    rel_path = os.path.relpath(python_bin_dir, depot_dir)
+    marker.write_text(rel_path + "\n")
+except ValueError:
+    # Fallback to absolute path if paths reside on different Windows drives (e.g. C: vs D:)
+    marker.write_text(str(python_bin_dir) + "\n")
 PY
   fi
 }
@@ -323,7 +329,7 @@ skia_use_xps = false
 skia_use_partition_alloc = false
 cc = "$CC"
 cxx = "$CXX"
-ar = "llvm-ar"
+ar = "$AR"
 extra_cflags = [
   "-DSKIA_C_DLL",
   "-DHAVE_SYSCALL_GETRANDOM",
