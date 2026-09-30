@@ -118,12 +118,8 @@ ensure_depot_tools() {
   fi
   
   patch_depot_tools_python_deps "$depot_dir"
-  if [ "$TARGET_OS" = "win" ] || [ "$TARGET_OS" = "mac" ]; then
-    unset DEPOT_TOOLS_UPDATE
-    export PATH="$depot_dir:$PATH"
-  else
-    export PATH="$PATH:$depot_dir"
-  fi
+  export PATH="$PATH:$depot_dir"
+
 
   if [ ! -f "$depot_dir/python3_bin_reldir.txt" ]; then
     initialize_depot_tools_system_python "$depot_dir"
