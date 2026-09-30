@@ -110,25 +110,22 @@ ensure_tools() {
 
 ensure_depot_tools() {
   depot_dir="$WORK_DIR/depot_tools"
-  python_bin_dir="$(dirname "$(command -v python3)")"
+  
   if [ ! -d "$depot_dir/.git" ]; then
     git clone --depth 1 https://chromium.googlesource.com/chromium/tools/depot_tools.git "$depot_dir"
   else
     git -C "$depot_dir" pull --ff-only
   fi
+  
   patch_depot_tools_python_deps "$depot_dir"
-  if [ "$TARGET_OS" = "win" ]; then
+  if [ "$TARGET_OS" = "win" ] || [ "$TARGET_OS" = "mac" ]; then
+    unset DEPOT_TOOLS_UPDATE
     export PATH="$depot_dir:$PATH"
-    export DEPOT_TOOLS_UPDATE=1
-    if [ ! -f "$depot_dir/python3_bin_reldir.txt" ]; then
-      bash "$depot_dir/ensure_bootstrap"
-    fi
-  elif [ "$TARGET_OS" = "mac" ]; then
-    export PATH="$python_bin_dir:$depot_dir:$PATH"
-    if [ ! -f "$depot_dir/python3_bin_reldir.txt" ]; then
-      "$depot_dir/ensure_bootstrap"
-    fi
   else
+    export PATH="$PATH:$depot_dir"
+  fi
+
+  if [ ! -f "$depot_dir/python3_bin_reldir.txt" ]; then
     initialize_depot_tools_system_python "$depot_dir"
   fi
 }
@@ -323,6 +320,9 @@ build_skia() {
 
   EXTRA_GN_ARGS="$(platform_get_gn_args)"
   if { [ "$TARGET_OS" = "win" ] || [ "$TARGET_OS" = "mac" ]; } && [ "$GN" = "gn" ]; then
+    if [ ! -f "$skia_dir/bin/gn" ]; then
+      python3 "$skia_dir/bin/fetch-gn"
+    fi
     GN="$skia_dir/bin/gn"
   fi
   if [ "$TARGET_OS" = "win" ]; then
