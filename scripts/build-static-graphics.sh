@@ -405,11 +405,6 @@ EOF_ARGS
 }
 
 build_angle() {
-  if [ "$TARGET_OS" != "win" ]; then
-    echo "Error: This script is only configured to build ANGLE on Windows. ANGLE is only used on Windows in Avalonia apps." >&2
-    exit 1
-  fi
-
   platform_build_angle
 }
 

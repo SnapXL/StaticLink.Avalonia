@@ -68,7 +68,23 @@ platform_build_angle() {
     cd "$src"
     
     python3 scripts/bootstrap.py
-    gclient sync -f -D -R
+    skia_tools_dir="$WORK_DIR/SkiaSharp-$SKIASHARP_VERSION/externals/skia/tools"
+    sync_path="$skia_tools_dir/git-sync-deps"
+    if [ ! -f "$sync_path" ]; then
+            echo "Skia's git-sync-deps not found at $sync_path. Downloading..."
+            mkdir -p "$skia_tools_dir"
+            curl -fSL "https://raw.githubusercontent.com/mono/skia/149e3e4fc360b887a1cb70432c4ddeda36bf2c5b/tools/git-sync-deps" -o "$sync_path"
+            chmod +x "$sync_path"
+    fi
+    mkdir -p "$src/tools"
+    cp "$sync_path" "$src/tools"
+    angle_sync_path="$src/tools/git-sync-deps"
+    if command -v cygpath >/dev/null 2>&1; then
+        angle_sync_path_win="$(cygpath -w "$angle_sync_path")"
+        python3 "$angle_sync_path_win"
+    else
+        python3 "$angle_sync_path"
+    fi
     
     out_dir="$src/out/win-static-$TARGET_CPU"
     mkdir -p "$out_dir"
