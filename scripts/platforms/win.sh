@@ -66,31 +66,17 @@ platform_build_angle() {
     
     current_dir="$(pwd)"
     cd "$src"
-    
+    unset DEPOT_TOOLS_METRICS
+    unset DEPOT_TOOLS_REPORT_BUILD
+    unset DEPOT_TOOLS_UPDATE
     python3 scripts/bootstrap.py
-    skia_tools_dir="$WORK_DIR/SkiaSharp-$SKIASHARP_VERSION/externals/skia/tools"
-    sync_path="$skia_tools_dir/git-sync-deps"
-    if [ ! -f "$sync_path" ]; then
-            echo "Skia's git-sync-deps not found at $sync_path. Downloading..."
-            mkdir -p "$skia_tools_dir"
-            curl -fSL "https://raw.githubusercontent.com/mono/skia/149e3e4fc360b887a1cb70432c4ddeda36bf2c5b/tools/git-sync-deps" -o "$sync_path"
-            chmod +x "$sync_path"
-    fi
-    mkdir -p "$src/tools"
-    cp "$sync_path" "$src/tools"
-    angle_sync_path="$src/tools/git-sync-deps"
-    if command -v cygpath >/dev/null 2>&1; then
-        angle_sync_path_win="$(cygpath -w "$angle_sync_path")"
-        python3 "$angle_sync_path_win"
-    else
-        python3 "$angle_sync_path"
-    fi
+    gclient sync -f -D -R
     
-    out_dir="$src/out/win-static-$TARGET_CPU"
+    out_dir="$src/out/$TARGET_OS-static-$TARGET_CPU"
     mkdir -p "$out_dir"
     
     cat << EOF > "$out_dir/args.gn"
-target_os = "win"
+target_os = "$TARGET_OS"
 target_cpu = "$TARGET_CPU"
 is_debug = false
 is_component_build = false
@@ -98,6 +84,7 @@ is_clang = true
 use_lld = true
 use_custom_libcxx = false
 use_thin_lto = false
+treat_warnings_as_errors = false
 symbol_level = 0
 angle_build_tests = false
 build_angle_deqp_tests = false
