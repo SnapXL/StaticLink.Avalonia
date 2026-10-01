@@ -93,19 +93,52 @@ jobs:
 
       - name: Verify static archives
         run: |
-          for rid in linux-x64 linux-arm64 linux-arm linux-musl-x64 linux-musl-arm64 linux-musl-arm osx-x64 osx-arm64 freebsd-x64 freebsd-arm64; do
-            test -f External/NativeStatic/$rid/native/libskia.a
-            test -f External/NativeStatic/$rid/native/libSkiaSharp.a
-            test -f External/NativeStatic/$rid/native/libHarfBuzzSharp.a
+          base_dir="External/NativeStatic"
+          echo "Scanning directory: $(pwd)/$base_dir"
+          
+          total_checked=0
+          missing_files=()
+          
+          unix_rids="linux-x64 linux-arm64 linux-arm linux-musl-x64 linux-musl-arm64 linux-musl-arm osx-x64 osx-arm64 freebsd-x64 freebsd-arm64"
+          unix_files="libskia.a libSkiaSharp.a libHarfBuzzSharp.a"
+          
+          for rid in $unix_rids; do
+            for file in $unix_files; do
+              total_checked=$((total_checked + 1))
+              filepath="$base_dir/$rid/native/$file"
+              if [ ! -f "$filepath" ]; then
+                missing_files+=("$filepath")
+              fi
+            done
           done
           
-          for rid in win-x64 win-arm64; do
-            test -f External/NativeStatic/$rid/native/skia.lib
-            test -f External/NativeStatic/$rid/native/SkiaSharp.lib
-            test -f External/NativeStatic/$rid/native/libHarfBuzzSharp.lib
-            test -f External/NativeStatic/$rid/native/libANGLE_static.lib
-            test -f External/NativeStatic/$rid/native/libGLESv2_static.lib
+          win_rids="win-x64 win-arm64"
+          win_files="skia.lib SkiaSharp.lib libHarfBuzzSharp.lib libANGLE_static.lib libGLESv2_static.lib"
+          
+          for rid in $win_rids; do
+            for file in $win_files; do
+              total_checked=$((total_checked + 1))
+              filepath="$base_dir/$rid/native/$file"
+              if [ ! -f "$filepath" ]; then
+                missing_files+=("$filepath")
+              fi
+            done
           done
+          
+          echo "----------------------------------------"
+          echo "Total files checked: $total_checked"
+          echo "Total missing files: ${#missing_files[@]}"
+          echo "----------------------------------------"
+          
+          if [ ${#missing_files[@]} -gt 0 ]; then
+            echo "Error: The following expected static libraries are missing:" >&2
+            for missing in "${missing_files[@]}"; do
+              echo "  - $missing" >&2
+            done
+            exit 1
+          else
+            echo "Success: All static libraries were verified successfully!"
+          fi
 
       - name: Pack NuGet package
         run: dotnet pack NuGet/StaticGraphics/StaticLink.Avalonia.csproj -c Release -o artifacts/nuget
