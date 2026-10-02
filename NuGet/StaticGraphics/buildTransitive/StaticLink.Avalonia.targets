@@ -185,6 +185,9 @@
         <ItemGroup>
             <DirectPInvoke Include="@(_StaticLinkAvaloniaDirectPInvoke)" />
             <DirectPInvokeList Include="$(_StaticLinkAvaloniaDirectPInvokeList)" />
+            <CustomLinkerArg Include="$(_StaticLinkAvaloniaNativeRoot)/libskia.a" Condition="Exists('$(_StaticLinkAvaloniaNativeRoot)/libskia.a')" />
+            <CustomLinkerArg Include="$(_StaticLinkAvaloniaNativeRoot)/libHarfBuzzSharp.a" Condition="Exists('$(_StaticLinkAvaloniaNativeRoot)/libHarfBuzzSharp.a')" />
+            <CustomLinkerArg Include="$(_StaticLinkAvaloniaNativeRoot)/libSkiaSharp.a" Condition="Exists('$(_StaticLinkAvaloniaNativeRoot)/libSkiaSharp.a')" />
         </ItemGroup>
         <Message Importance="high" Text="StaticLink.Avalonia DirectPInvoke (FreeBSD): @(DirectPInvoke)" />
         <Message Importance="high" Text="StaticLink.Avalonia NativeLibrary (FreeBSD): @(NativeLibrary)" />
