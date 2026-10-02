@@ -576,9 +576,9 @@ jobs:
             # Install the .NET 10 SDK for FreeBSD from the community source-build.
             # x64 and arm64 tarballs are published per release.
             cd $HOME
-            wget -q "https://github.com/Thefrank/dotnet-freebsd-cross-sb-gha/releases/download/11.0.100-rc.1.26425.128-freebsd/dotnet-sdk-11.0.100-rc.1.26425.128-${{ matrix.rid }}.tar.gz"
+            wget -q "https://github.com/sec/dotnet-core-freebsd-source-build/releases/download/10.0.110-vmr/dotnet-sdk-10.0.110-${{ matrix.rid }}.tar.gz"
             mkdir -p $HOME/dotnet
-            tar -xzf "dotnet-sdk-11.0.100-rc.1.26425.128-${{ matrix.rid }}.tar.gz" -C $HOME/dotnet
+            tar -xzf "dotnet-sdk-10.0.110-${{ matrix.rid }}.tar.gz" -C $HOME/dotnet
             export DOTNET_ROOT=$HOME/dotnet
             export PATH=$HOME/dotnet:$PATH
             dotnet --info
@@ -613,7 +613,6 @@ jobs:
             done
 
             cd "$PUBLISH_DIR"
-            chmod +x ./AvaloniaStaticLinkSmoke
             timeout 15s "$GITHUB_WORKSPACE/scripts/infra/freebsd-xvfb-run.sh" -a ./AvaloniaStaticLinkSmoke || code=$?
             if [ "${code:-0}" = "124" ] || [ "${code:-0}" = "143" ]; then
               echo "Avalonia FreeBSD smoke app stayed alive for 15 seconds."
