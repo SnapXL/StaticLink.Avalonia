@@ -256,6 +256,7 @@ jobs:
           dotnet publish "$project_dir/AvaloniaStaticLinkSmoke.csproj" \
             -c Release \
             -r "${{ matrix.rid }}" \
+            -v:diag \
             -p:PublishDir="$PWD/artifacts/smoke-${{ matrix.rid }}/"
 
       - name: Publish Avalonia musl smoke app
@@ -301,7 +302,7 @@ jobs:
             -v "${{ github.workspace }}:/workspace" \
             -w /workspace \
             "${{ env.DOTNET_ALPINE_IMAGE }}" \
-            sh -c "apk add --no-cache clang lld build-base zlib-dev fontconfig-dev && dotnet publish /workspace/artifacts/avalonia-smoke-src/AvaloniaStaticLinkSmoke.csproj -c Release -r ${{ matrix.rid }} --configfile /workspace/artifacts/avalonia-smoke-src/NuGet.config -p:PublishDir=/workspace/artifacts/smoke-${{ matrix.rid }}/"
+            sh -c "apk add --no-cache clang lld build-base zlib-dev fontconfig-dev && dotnet publish /workspace/artifacts/avalonia-smoke-src/AvaloniaStaticLinkSmoke.csproj -c Release -r ${{ matrix.rid }} -v:diag --configfile /workspace/artifacts/avalonia-smoke-src/NuGet.config -p:PublishDir=/workspace/artifacts/smoke-${{ matrix.rid }}/"
       - name: Verify no dynamic graphics libraries remain
         shell: pwsh
         run: |
@@ -486,6 +487,7 @@ jobs:
           dotnet publish "$project_dir/AvaloniaStaticLinkSmoke.csproj" \
             -c Release \
             -r osx-arm64 \
+            -v:diag \
             --configfile "$project_dir/NuGet.config" \
             -p:PublishDir="$PWD/artifacts/smoke-osx-arm64-metal/"
 
@@ -600,6 +602,7 @@ jobs:
             dotnet publish "$PROJECT_DIR/AvaloniaStaticLinkSmoke.csproj" \
               -c Release \
               -r "${{ matrix.rid }}" \
+              -v:diag \
               --configfile "$PROJECT_DIR/NuGet.config" \
               -p:PublishDir="$GITHUB_WORKSPACE/artifacts/smoke-${{ matrix.rid }}/"
 
