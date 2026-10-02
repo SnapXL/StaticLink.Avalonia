@@ -256,10 +256,6 @@ jobs:
           dotnet publish "$project_dir/AvaloniaStaticLinkSmoke.csproj" \
             -c Release \
             -r "${{ matrix.rid }}" \
-            -p:PublishAot=true \
-            -p:SelfContained=true \
-            -p:PublishSingleFile=true \
-            -p:StripSymbols=true \
             -p:PublishDir="$PWD/artifacts/smoke-${{ matrix.rid }}/"
 
       - name: Publish Avalonia musl smoke app
@@ -305,7 +301,7 @@ jobs:
             -v "${{ github.workspace }}:/workspace" \
             -w /workspace \
             "${{ env.DOTNET_ALPINE_IMAGE }}" \
-            sh -c "apk add --no-cache clang lld build-base zlib-dev fontconfig-dev && dotnet publish /workspace/artifacts/avalonia-smoke-src/AvaloniaStaticLinkSmoke.csproj -c Release -r ${{ matrix.rid }} --configfile /workspace/artifacts/avalonia-smoke-src/NuGet.config /p:PublishAot=true /p:SelfContained=true /p:PublishSingleFile=true /p:StripSymbols=true /p:PublishDir=/workspace/artifacts/smoke-${{ matrix.rid }}/"
+            sh -c "apk add --no-cache clang lld build-base zlib-dev fontconfig-dev && dotnet publish /workspace/artifacts/avalonia-smoke-src/AvaloniaStaticLinkSmoke.csproj -c Release -r ${{ matrix.rid }} --configfile /workspace/artifacts/avalonia-smoke-src/NuGet.config -p:PublishDir=/workspace/artifacts/smoke-${{ matrix.rid }}/"
       - name: Verify no dynamic graphics libraries remain
         shell: pwsh
         run: |
@@ -491,11 +487,7 @@ jobs:
             -c Release \
             -r osx-arm64 \
             --configfile "$project_dir/NuGet.config" \
-            /p:PublishAot=true \
-            /p:SelfContained=true \
-            /p:PublishSingleFile=true \
-            /p:StripSymbols=true \
-            /p:PublishDir="$PWD/artifacts/smoke-osx-arm64-metal/"
+            -p:PublishDir="$PWD/artifacts/smoke-osx-arm64-metal/"
 
       - name: Verify fully static third-party libraries
         shell: bash
@@ -584,9 +576,9 @@ jobs:
             # Install the .NET 10 SDK for FreeBSD from the community source-build.
             # x64 and arm64 tarballs are published per release.
             cd $HOME
-            wget -q "https://github.com/sec/dotnet-core-freebsd-source-build/releases/download/10.0.110-vmr/dotnet-sdk-10.0.110-${{ matrix.rid }}.tar.gz"
+            wget -q "https://github.com/Thefrank/dotnet-freebsd-cross-sb-gha/releases/download/11.0.100-rc.1.26425.128-freebsd/dotnet-sdk-11.0.100-rc.1.26425.128-${{ matrix.rid }}.tar.gz"
             mkdir -p $HOME/dotnet
-            tar -xzf "dotnet-sdk-10.0.110-${{ matrix.rid }}.tar.gz" -C $HOME/dotnet
+            tar -xzf "dotnet-sdk-11.0.100-rc.1.26425.128-${{ matrix.rid }}.tar.gz" -C $HOME/dotnet
             export DOTNET_ROOT=$HOME/dotnet
             export PATH=$HOME/dotnet:$PATH
             dotnet --info
@@ -609,11 +601,7 @@ jobs:
               -c Release \
               -r "${{ matrix.rid }}" \
               --configfile "$PROJECT_DIR/NuGet.config" \
-              /p:PublishAot=true \
-              /p:SelfContained=true \
-              /p:PublishSingleFile=true \
-              /p:StripSymbols=true \
-              /p:PublishDir="$GITHUB_WORKSPACE/artifacts/smoke-${{ matrix.rid }}/"
+              -p:PublishDir="$GITHUB_WORKSPACE/artifacts/smoke-${{ matrix.rid }}/"
 
             PUBLISH_DIR="$GITHUB_WORKSPACE/artifacts/smoke-${{ matrix.rid }}"
             for lib in libSkiaSharp.so libHarfBuzzSharp.so libSkiaSharp.dll libHarfBuzzSharp.dll; do
