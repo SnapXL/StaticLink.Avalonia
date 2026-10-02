@@ -25,6 +25,7 @@ sync_angle() {
 apply_angle_patches() {
     src="$1"
     build_file="$src/BUILD.gn"
+    deps_file="$src/DEPS"
 
     python3 - "$build_file" << 'EOF'
 import sys
@@ -52,6 +53,41 @@ angle_static_library("libGLESv2_static") {'''
 
     with open(build_file, 'w', encoding='utf-8', newline='') as f:
         f.write(build_text)
+EOF
+python3 - "$deps_file" << 'EOF'
+import sys
+import re
+
+deps_file = sys.argv[1]
+with open(deps_file, 'r', encoding='utf-8') as f:
+    content = f.read()
+
+# Unnecessary dependencies on Windows that make checking out drastically slower
+targets = [
+    'third_party/catapult',
+    'third_party/dawn',
+    'third_party/llvm/src',
+    'third_party/SwiftShader',
+    'third_party/VK-GL-CTS/src'
+]
+
+pattern = re.compile(
+    r"^[ \t]*('[^']+'|\"[^\"]+\")[ \t]*:[ \t]*\{.*?\},\s*\n",
+    re.MULTILINE | re.DOTALL
+)
+
+def replacer(match):
+    block = match.group(0)
+    for name in targets:
+        if f"'{name}'" in block or f'"{name}"' in block:
+            return ""
+    return block
+
+new_content = pattern.sub(replacer, content)
+
+if new_content != content:
+    with open(deps_file, 'w', encoding='utf-8', newline='') as f:
+        f.write(new_content)
 EOF
 }
 
