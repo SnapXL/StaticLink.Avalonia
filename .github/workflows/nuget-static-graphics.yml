@@ -613,7 +613,7 @@ jobs:
             done
 
             cd "$PUBLISH_DIR"
-            timeout 15s "$GITHUB_WORKSPACE/scripts/infra/freebsd-xvfb-run.sh" -a ./AvaloniaStaticLinkSmoke || code=$?
+            "$GITHUB_WORKSPACE/scripts/infra/freebsd-xvfb-run.sh" 15 ./AvaloniaStaticLinkSmoke || code=$?
             if [ "${code:-0}" = "124" ] || [ "${code:-0}" = "143" ]; then
               echo "Avalonia FreeBSD smoke app stayed alive for 15 seconds."
               exit 0
