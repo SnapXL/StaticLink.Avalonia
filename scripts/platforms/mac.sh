@@ -103,6 +103,7 @@ OBJC
 
 platform_get_gn_args() {
   echo "min_macos_version = \"10.13\""
+  echo "skia_use_metal = true"
 }
 
 case "$(basename "$0")" in
