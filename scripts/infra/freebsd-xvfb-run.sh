@@ -25,7 +25,7 @@ cleanup() {
   if [ -n "${XVFB_PID:-}" ]; then
     kill "$XVFB_PID" >/dev/null 2>&1 || true
     wait "$XVFB_PID" >/dev/null 2>&1 || true
-  }
+  fi
 }
 trap cleanup EXIT
 
