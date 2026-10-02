@@ -113,7 +113,7 @@ jobs:
           done
           
           win_rids="win-x64 win-arm64"
-          win_files="skia.lib SkiaSharp.lib libHarfBuzzSharp.lib libANGLE_static.lib libGLESv2_static.lib"
+          win_files="libskia.lib libSkiaSharp.lib libHarfBuzzSharp.lib libANGLE_static.lib libGLESv2_static.lib"
           
           for rid in $win_rids; do
             for file in $win_files; do
