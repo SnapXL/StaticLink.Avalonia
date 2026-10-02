@@ -106,8 +106,8 @@ platform_get_gn_args() {
 }
 
 case "$(basename "$0")" in
-    macos.sh|*sh)
-        if [ "$(basename "$0")" = "macos.sh" ]; then
+    mac.sh|*sh)
+        if [ "$(basename "$0")" = "mac.sh" ]; then
             build_macos_avalonia_native "$@"
         fi
         ;;
