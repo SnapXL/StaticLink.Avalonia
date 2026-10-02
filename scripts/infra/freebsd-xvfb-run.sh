@@ -34,7 +34,7 @@ sleep 1
 
 echo "Running target application with timeout of ${TIMEOUT_SECONDS}s: $*"
 set +e
-timeout "${TIMEOUT_SECONDS}s" "$@"
+timeout "$TIMEOUT_SECONDS" "$@"
 code=$?
 set -e
 
