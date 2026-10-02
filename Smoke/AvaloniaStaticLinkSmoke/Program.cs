@@ -12,7 +12,7 @@ internal static class Program
         var builder = AppBuilder.Configure<App>()
             .LogToTrace();
 
-        builder = !OperatingSystem.IsFreeBSD() ? builder.UsePlatformDetect() : builder.UseSkia().UseX11();
+        builder = !OperatingSystem.IsFreeBSD() ? builder.UsePlatformDetect() : builder.UseSkia().UseX11().UseHarfBuzz();
         if (OperatingSystem.IsWindows())
         {
             builder = builder.With(new Win32PlatformOptions
