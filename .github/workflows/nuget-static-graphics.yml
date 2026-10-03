@@ -533,6 +533,9 @@ jobs:
           PY
   publish-nuget:
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
     needs:
       - pack
       - smoke-avalonia
