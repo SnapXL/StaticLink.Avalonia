@@ -40,8 +40,7 @@ On macOS, only Avalonia 12 with skia3/4 supports Metal. Avalonia 11 fully static
 dotnet publish -c Release -r win-x64 -p:PublishAot=true
 ```
 
-Use the RID you need, such as `win-x86`, `linux-x64`, `linux-arm64`, `linux-arm`, `osx-arm64`, or `osx-x64`, `freebsd-x64`, `freebsd-arm64`.
-
+Use the RID you need, such as `win-arm64`, `linux-x64`, `linux-arm64`, `linux-arm`, `osx-arm64`, or `osx-x64`.
 
 ## Native Package Automation
 

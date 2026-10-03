@@ -8,7 +8,7 @@ Building an Avalonia program using NativeAOT generally entails dealing with comp
 
 - Statically links SkiaSharp with unused features (like PDF and Skottie) stripped out to shrink your final binary size.
 - Compiles ANGLE binaries strictly for Windows, keeping your NuGet footprint lean across other platforms.
-- Adds built-in support for FreeBSD (x64/arm64) and Linux ARMHF (glibc/musl), compiled using stable Ubuntu 18.04 and Alpine 3.19 sysroots.
+- Adds support for Linux ARMHF (glibc/musl), compiled using stable Ubuntu 18.04 and Alpine 3.19 sysroots.
 - Pulls from an updated ANGLE branch containing upstream fixes ahead of official SkiaSharp releases.
 
 ## Install
