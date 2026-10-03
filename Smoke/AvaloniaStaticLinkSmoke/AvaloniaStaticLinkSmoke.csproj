@@ -20,8 +20,8 @@
   <ItemGroup>
     <PackageReference Include="Avalonia" Version="$(AvaloniaVersion)" />
     <PackageReference Include="Avalonia.Desktop" Version="$(AvaloniaVersion)" />
-    <PackageReference Include="SkiaSharp" Version="4.154.0-preview.1.26454.9" />
-    <PackageReference Include="HarfBuzzSharp" Version="14.2.1.400-preview.1.26454.9" />
+    <PackageReference Include="SkiaSharp" Version="4.155.0-preview.2.26479.13" />
+    <PackageReference Include="HarfBuzzSharp" Version="14.4.0-preview.2.26479.13" />
     <PackageReference Include="BrycensRanch.StaticLink.Avalonia" Version="$(StaticLinkVersion)" Condition="'$(StaticLinkVersion)' != ''" />
     <PackageReference Include="BrycensRanch.StaticLink.Avalonia.Native" Version="$(StaticLinkNativeVersion)" Condition="'$(StaticLinkNativeVersion)' != ''" />
   </ItemGroup>

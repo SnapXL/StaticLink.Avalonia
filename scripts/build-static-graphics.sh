@@ -41,7 +41,7 @@ if [ -z "${RID:-}" ]; then
 fi
 export RID
 OUTPUT_DIR="${OUTPUT_DIR:-$ROOT_DIR/External/NativeStatic/$RID}"
-SKIASHARP_VERSION="${SKIASHARP_VERSION:-4.154.0-preview.1}"
+SKIASHARP_VERSION="${SKIASHARP_VERSION:-4.155.0-preview.2}"
 BUILD_JOBS="${BUILD_JOBS:-$(nproc 2>/dev/null || echo 1)}"
 SKIA_DEPS_RETRIES="${SKIA_DEPS_RETRIES:-3}"
 CC="${CC:-clang}"
