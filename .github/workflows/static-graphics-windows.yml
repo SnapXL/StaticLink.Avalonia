@@ -8,7 +8,7 @@ on:
         type: string
       angle_branch:
         required: false
-        default: "8059"
+        default: "8078"
         type: string
   workflow_dispatch:
     inputs:
