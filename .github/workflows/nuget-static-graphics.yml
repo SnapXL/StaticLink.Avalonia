@@ -235,7 +235,7 @@ jobs:
           
           avalonia_version="${{ matrix.avalonia_version }}"
           if [ -z "$avalonia_version" ]; then
-            avalonia_version="12.1.3"
+            avalonia_version="12.1.4"
           fi
           
           project_dir="$PWD/artifacts/avalonia-smoke-src"
@@ -289,7 +289,7 @@ jobs:
             --project-dir "$project_dir" \
             --nuget-source "/workspace/artifacts/nuget" \
             --static-link-version "$version" \
-            --avalonia-version "12.1.3"
+            --avalonia-version "12.1.4"
 
           docker run --rm \
             -v "${{ github.workspace }}:/workspace" \
