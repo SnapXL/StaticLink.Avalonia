@@ -9,7 +9,7 @@ Building an Avalonia program using NativeAOT generally entails dealing with comp
 - Statically links SkiaSharp with unused features (like PDF and Skottie) stripped out to shrink your final binary size.
 - Compiles ANGLE binaries strictly for Windows, keeping your NuGet footprint lean across other platforms.
 - Adds support for Linux ARMHF (glibc/musl), compiled using stable Ubuntu 18.04 and Alpine 3.19 sysroots.
-- Pulls from an updated ANGLE branch containing upstream fixes ahead of official SkiaSharp releases.
+- Pulls from an updated ANGLE branch containing upstream fixes ahead of official [Avalonia.Angle.Windows.Natives](https://www.nuget.org/packages/Avalonia.Angle.Windows.Natives) releases.
 
 ## Install
 
@@ -17,13 +17,13 @@ Choose the static graphics package that matches the Avalonia and SkiaSharp major
 
 | Avalonia version | SkiaSharp version | `BrycensRanch.StaticLink.Avalonia` version |
 | --- | --- | --- |
-| 12 | 4.155.0-preview.2 | `4.155.0-preview.2-8059.1` |
+| 12 | 4.156.0-preview.1 | `4.156.0-preview.1-8078.1` |
 
 Example:
 ```xml
 <ItemGroup>
-  <PackageReference Include="Avalonia" Version="12.1.3" />
-  <PackageReference Include="BrycensRanch.StaticLink.Avalonia" Version="4.155.0-preview.2-8059.1" />
+  <PackageReference Include="Avalonia" Version="12.1.4" />
+  <PackageReference Include="BrycensRanch.StaticLink.Avalonia" Version="4.156.0-preview.1-8078.1" />
 </ItemGroup>
 ```
 
@@ -32,8 +32,8 @@ Example:
 For macOS, also reference `BrycensRanch.StaticLink.Avalonia.Native`. This package contains `libAvaloniaNative.a`, so its version must match the Avalonia version used by the application.
 
 ```xml
-<!-- Avalonia 12.1.3 -->
-<PackageReference Include="BrycensRanch.StaticLink.Avalonia.Native" Version="12.1.3.1" />
+<!-- Avalonia 12.1.4 -->
+<PackageReference Include="BrycensRanch.StaticLink.Avalonia.Native" Version="12.1.4.1" />
 ```
 
 Add only the `BrycensRanch.StaticLink.Avalonia.Native` reference matching your Avalonia version.
@@ -47,6 +47,8 @@ dotnet publish -c Release -r win-x64 -p:PublishAot=true
 ```
 
 Use the RID you need, such as `win-x86`, `linux-x64`, `linux-arm64`, `osx-arm64`, or `osx-x64`.
+
+Inspecting all the supported RIDs can be done via [NuGet](https://nuget.info/packages/BrycensRanch.StaticLink.Avalonia)
 
 
 ### Build config

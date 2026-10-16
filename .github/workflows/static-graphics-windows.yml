@@ -14,11 +14,11 @@ on:
     inputs:
       skiasharp_version:
         required: true
-        default: "4.155.0-preview.2"
+        default: "4.156.0-preview.1"
         type: string
       angle_branch:
         required: false
-        default: "8059"
+        default: "8078"
         type: string
 
 jobs:
