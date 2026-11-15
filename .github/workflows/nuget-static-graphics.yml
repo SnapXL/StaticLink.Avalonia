@@ -167,10 +167,10 @@ jobs:
             runner: ubuntu-24.04-arm
           - rid: osx-x64
             runner: macos-15-intel
-            avalonia_version: 12.1.3
+            avalonia_version: 12.1.6
           - rid: osx-arm64
             runner: macos-15
-            avalonia_version: 12.1.3
+            avalonia_version: 12.1.6
     runs-on: ${{ matrix.runner }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -235,7 +235,7 @@ jobs:
           
           avalonia_version="${{ matrix.avalonia_version }}"
           if [ -z "$avalonia_version" ]; then
-            avalonia_version="12.1.4"
+            avalonia_version="12.1.6"
           fi
           
           project_dir="$PWD/artifacts/avalonia-smoke-src"
@@ -289,7 +289,7 @@ jobs:
             --project-dir "$project_dir" \
             --nuget-source "/workspace/artifacts/nuget" \
             --static-link-version "$version" \
-            --avalonia-version "12.1.4"
+            --avalonia-version "12.1.6"
 
           docker run --rm \
             -v "${{ github.workspace }}:/workspace" \
@@ -474,8 +474,8 @@ jobs:
             --project-dir "$project_dir" \
             --nuget-source "$(cd artifacts/nuget && pwd)" \
             --static-link-version "$version" \
-            --avalonia-version "12.1.3" \
-            --static-link-native-version "12.1.3.1"
+            --avalonia-version "12.1.6" \
+            --static-link-native-version "12.1.6.1"
 
           dotnet publish "$project_dir/AvaloniaStaticLinkSmoke.csproj" \
             -c Release \
@@ -633,5 +633,5 @@ jobs:
             gh release create "$release_tag" release-files/* \
               --target "$GITHUB_SHA" \
               --title "$title" \
-              --notes "NuGet package plus Avalonia 12.1.3 NativeAOT single-file smoke apps for win-x64, win-x86, win-arm64, linux-x64, linux-arm64, linux-musl-x64, linux-musl-arm64, osx-x64, and osx-arm64."
+              --notes "NuGet package plus Avalonia 12.1.6 NativeAOT single-file smoke apps for win-x64, win-x86, win-arm64, linux-x64, linux-arm64, linux-musl-x64, linux-musl-arm64, osx-x64, and osx-arm64."
           fi

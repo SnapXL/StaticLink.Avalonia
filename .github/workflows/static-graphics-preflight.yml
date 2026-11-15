@@ -36,7 +36,7 @@ jobs:
           raw_version = root.findtext(".//Version").strip()
           
           # Extract clean base version (e.g., 4.154.0-preview.1 from 4.154.0-preview.1.26454.9)
-          match = re.match(r"^(\d+\.\d+\.\d+(-preview\.\d+)?)", raw_version)
+          match = re.match(r"^(\d+\.\d+\.\d+(-[A-Za-z]+\.\d+)?)", raw_version)
           skiasharp_version = match.group(1) if match else raw_version
           
           package_version = raw_version
