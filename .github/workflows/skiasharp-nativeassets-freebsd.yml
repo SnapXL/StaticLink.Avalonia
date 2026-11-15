@@ -1,0 +1,500 @@
+name: skiasharp-nativeassets-freebsd
+
+on:
+  schedule:
+    - cron: "47 3 * * *"
+  workflow_dispatch:
+    inputs:
+      skiasharp_versions:
+        description: Comma-separated SkiaSharp versions to build; empty uses the latest N stable NuGet versions
+        required: false
+        type: string
+      version_count:
+        description: How many of the latest stable SkiaSharp versions to consider
+        required: false
+        default: "10"
+        type: string
+      force_build:
+        description: Build even when the BrycensRanch package version already exists
+        required: true
+        default: false
+        type: boolean
+      publish_to_nuget:
+        description: Publish with NuGet Trusted Publishing after smoke tests
+        required: true
+        default: true
+        type: boolean
+
+concurrency:
+  group: skiasharp-nativeassets-freebsd
+  cancel-in-progress: false
+
+jobs:
+  detect:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      should_build: ${{ steps.plan.outputs.should_build }}
+      package_matrix: ${{ steps.plan.outputs.package_matrix }}
+      build_matrix: ${{ steps.plan.outputs.build_matrix }}
+    steps:
+      - name: Plan unpublished SkiaSharp / HarfBuzzSharp builds
+        id: plan
+        shell: bash
+        env:
+          REQUESTED_VERSIONS: ${{ inputs.skiasharp_versions }}
+          VERSION_COUNT: ${{ inputs.version_count || '10' }}
+          FORCE_BUILD: ${{ inputs.force_build }}
+        run: |
+          set -euo pipefail
+
+          SKIA_ID="brycensranch.skiasharp.nativeassets.freebsd"
+          HB_ID="brycensranch.harfbuzzsharp.nativeassets.freebsd"
+          FLAT="https://api.nuget.org/v3-flatcontainer"
+
+          # NuGet versions allow at most 4 parts. Append ".1" when there is room,
+          # otherwise reuse the upstream version unchanged.
+          pkg_version() {
+            local parts
+            parts="$(awk -F. '{print NF}' <<<"$1")"
+            if [ "$parts" -lt 4 ]; then echo "$1.1"; else echo "$1"; fi
+          }
+
+          exists() { # $1 = lowercase package id, $2 = version
+            curl --fail --silent --location --head --output /dev/null \
+              "$FLAT/$1/$2/$1.$2.nupkg"
+          }
+
+          if [ -n "$REQUESTED_VERSIONS" ]; then
+            versions="$(tr ', ' '\n\n' <<<"$REQUESTED_VERSIONS" | sed '/^$/d')"
+          else
+            versions="$(curl --fail --silent --show-error --location \
+              "$FLAT/skiasharp/index.json" \
+              | jq -r --argjson n "$VERSION_COUNT" \
+                '[.versions[] | select(contains("-") | not)] | .[([length - $n, 0] | max):] | .[]')"
+          fi
+
+          if [ -z "$versions" ]; then
+            echo "Could not determine any SkiaSharp versions." >&2
+            exit 1
+          fi
+
+          declare -A hb_seen
+          items='[]'
+
+          while read -r v; do
+            [ -z "$v" ] && continue
+            echo "== SkiaSharp $v =="
+
+            # Resolve the HarfBuzzSharp version this SkiaSharp release depends on
+            hb="$(curl --fail --silent --location \
+                "$FLAT/skiasharp.harfbuzz/$v/skiasharp.harfbuzz.nuspec" \
+              | grep -oP '<dependency id="HarfBuzzSharp" version="\K[^"]+' \
+              | head -n1 | sed -E 's/[][()]//g; s/,.*//; s/ //g' || true)"
+
+            if [ -z "$hb" ]; then
+              echo "::warning::Could not resolve HarfBuzzSharp version for SkiaSharp $v; skipping"
+              continue
+            fi
+
+            skia_pkg="$(pkg_version "$v")"
+            hb_pkg="$(pkg_version "$hb")"
+
+            # Every item carries both pairs so the Avalonia smoke app can reference
+            # the matching SkiaSharp + HarfBuzzSharp versions and native packages.
+            if [ "$FORCE_BUILD" = "true" ] || ! exists "$SKIA_ID" "$skia_pkg"; then
+              items="$(jq -c \
+                --arg id "BrycensRanch.SkiaSharp.NativeAssets.FreeBSD" \
+                --arg lib "libSkiaSharp.so" \
+                --arg up "$v" --arg pv "$skia_pkg" --arg ref "v$v" \
+                --arg sv "$v" --arg hv "$hb" --arg spv "$skia_pkg" --arg hpv "$hb_pkg" \
+                '. + [{component:"skiasharp",package_id:$id,lib:$lib,upstream_version:$up,package_version:$pv,source_ref:$ref,skia_version:$sv,harfbuzz_version:$hv,skia_package_version:$spv,harfbuzz_package_version:$hpv}]' \
+                <<<"$items")"
+              echo "  + SkiaSharp package $skia_pkg needs build"
+            else
+              echo "  - SkiaSharp package $skia_pkg already published"
+            fi
+
+            if [ -n "${hb_seen[$hb]:-}" ]; then
+              echo "  - HarfBuzzSharp $hb already planned"
+              continue
+            fi
+            hb_seen[$hb]=1
+
+            if [ "$FORCE_BUILD" = "true" ] || ! exists "$HB_ID" "$hb_pkg"; then
+              # HarfBuzzSharp's native source lives in the SkiaSharp repo, so build it
+              # from the earliest SkiaSharp tag that uses this HarfBuzzSharp version.
+              items="$(jq -c \
+                --arg id "BrycensRanch.HarfBuzzSharp.NativeAssets.FreeBSD" \
+                --arg lib "libHarfBuzzSharp.so" \
+                --arg up "$hb" --arg pv "$hb_pkg" --arg ref "v$v" \
+                --arg sv "$v" --arg hv "$hb" --arg spv "$skia_pkg" --arg hpv "$hb_pkg" \
+                '. + [{component:"harfbuzzsharp",package_id:$id,lib:$lib,upstream_version:$up,package_version:$pv,source_ref:$ref,skia_version:$sv,harfbuzz_version:$hv,skia_package_version:$spv,harfbuzz_package_version:$hpv}]' \
+                <<<"$items")"
+              echo "  + HarfBuzzSharp package $hb_pkg needs build (from v$v)"
+            else
+              echo "  - HarfBuzzSharp package $hb_pkg already published"
+            fi
+          done <<<"$versions"
+
+          rids='[
+            {"rid":"freebsd-x64","target_cpu":"x64","freebsd_arch":"x86_64","freebsd_dir":"amd64/amd64","target_triple":"x86_64-unknown-freebsd14"},
+            {"rid":"freebsd-arm64","target_cpu":"arm64","freebsd_arch":"aarch64","freebsd_dir":"arm64/aarch64","target_triple":"aarch64-unknown-freebsd14"}
+          ]'
+
+          # package_matrix: one entry per package. build_matrix: package x rid.
+          build="$(jq -c --argjson r "$rids" '[.[] as $i | $r[] | $i + .]' <<<"$items")"
+
+          count="$(jq 'length' <<<"$items")"
+          should_build=false
+          if [ "$count" -gt 0 ]; then should_build=true; fi
+
+          echo "Packages to build: $count"
+          jq -r '.[] | "  \(.package_id) \(.package_version) (ref \(.source_ref))"' <<<"$items"
+
+          echo "should_build=$should_build" >> "$GITHUB_OUTPUT"
+          echo "package_matrix=$(jq -c '{include: .}' <<<"$items")" >> "$GITHUB_OUTPUT"
+          echo "build_matrix=$(jq -c '{include: .}' <<<"$build")" >> "$GITHUB_OUTPUT"
+
+  build:
+    name: build ${{ matrix.component }} ${{ matrix.package_version }} ${{ matrix.rid }}
+    needs: detect
+    if: ${{ needs.detect.outputs.should_build == 'true' }}
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.detect.outputs.build_matrix) }}
+    runs-on: ubuntu-26.04
+    timeout-minutes: 240
+    permissions:
+      contents: read
+    env:
+      COMPONENT: ${{ matrix.component }}
+      SOURCE_REF: ${{ matrix.source_ref }}
+      LIB_NAME: ${{ matrix.lib }}
+      RID: ${{ matrix.rid }}
+      TARGET_CPU: ${{ matrix.target_cpu }}
+      FREEBSD_TRIPLE: ${{ matrix.target_triple }}
+      OUTPUT_DIR: External/SkiaSharpNative/${{ matrix.rid }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Restore native build cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: External/SkiaSharpNative/.work
+          key: skiasharp-freebsd-${{ matrix.component }}-${{ matrix.rid }}-${{ matrix.source_ref }}-${{ hashFiles('scripts/build-skiasharp-freebsd-native.sh', 'scripts/infra/setup-sysroot-freebsd.sh') }}
+
+      - name: Install cross-compilation host tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang lld llvm ninja-build curl xz-utils pkg-config python3 git gn libfontconfig1-dev
+
+      - name: Setup FreeBSD Sysroot
+        env:
+          FREEBSD_DIR: ${{ matrix.freebsd_dir }}
+        run: scripts/infra/setup-sysroot-freebsd.sh
+
+      - name: Build FreeBSD native library
+        env:
+          CC: clang
+          CXX: clang++
+          AR: llvm-ar
+          LD: ld.lld
+          TARGET_OS: freebsd
+        run: scripts/build-skiasharp-freebsd-native.sh "$COMPONENT"
+
+      - name: Verify native library
+        shell: bash
+        run: |
+          set -euo pipefail
+          lib="$OUTPUT_DIR/$LIB_NAME"
+          test -s "$lib"
+
+          file "$lib"
+          file "$lib" | grep -q "FreeBSD"
+          case "$RID" in
+            freebsd-x64)   file "$lib" | grep -q "x86-64" ;;
+            freebsd-arm64) file "$lib" | grep -qi "aarch64" ;;
+          esac
+
+          echo "Dynamic dependencies:"
+          llvm-readelf -d "$lib" | grep NEEDED || true
+
+          if [ "$COMPONENT" = "skiasharp" ]; then prefix="sk_"; else prefix="hb_"; fi
+          exported="$(llvm-nm -D --defined-only "$lib" | grep -c " ${prefix}" || true)"
+          echo "Exported ${prefix}* symbols: $exported"
+          test "$exported" -gt 0
+
+      - name: Upload native library
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: native-${{ matrix.component }}-${{ matrix.package_version }}-${{ matrix.rid }}
+          path: External/SkiaSharpNative/${{ matrix.rid }}/${{ matrix.lib }}
+          if-no-files-found: error
+
+  pack:
+    name: pack ${{ matrix.package_id }} ${{ matrix.package_version }}
+    needs:
+      - detect
+      - build
+    # Pack each package whose libraries built, even if other matrix legs failed.
+    if: ${{ !cancelled() && needs.detect.outputs.should_build == 'true' && needs.build.result != 'skipped' }}
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.detect.outputs.package_matrix) }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Setup .NET
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Download freebsd-x64 library
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: native-${{ matrix.component }}-${{ matrix.package_version }}-freebsd-x64
+          path: artifacts/freebsd-x64
+
+      - name: Download freebsd-arm64 library
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: native-${{ matrix.component }}-${{ matrix.package_version }}-freebsd-arm64
+          path: artifacts/freebsd-arm64
+
+      - name: Pack NuGet package
+        shell: bash
+        env:
+          PACKAGE_ID: ${{ matrix.package_id }}
+          PACKAGE_VERSION: ${{ matrix.package_version }}
+          UPSTREAM_VERSION: ${{ matrix.upstream_version }}
+          COMPONENT: ${{ matrix.component }}
+          LIB_NAME: ${{ matrix.lib }}
+        run: |
+          set -euo pipefail
+          mkdir -p pack artifacts/nuget
+
+          cat > pack/Pack.csproj <<EOF
+          <Project Sdk="Microsoft.NET.Sdk">
+            <PropertyGroup>
+              <TargetFramework>netstandard2.0</TargetFramework>
+              <PackageId>${PACKAGE_ID}</PackageId>
+              <Version>${PACKAGE_VERSION}</Version>
+              <Authors>BrycensRanch</Authors>
+              <Description>FreeBSD (x64, arm64) native assets for ${COMPONENT} ${UPSTREAM_VERSION}, built from the mono/SkiaSharp sources. Unofficial.</Description>
+              <PackageTags>${COMPONENT};freebsd;native</PackageTags>
+              <PackageLicenseExpression>MIT</PackageLicenseExpression>
+              <PackageProjectUrl>https://github.com/${GITHUB_REPOSITORY}</PackageProjectUrl>
+              <RepositoryUrl>https://github.com/${GITHUB_REPOSITORY}</RepositoryUrl>
+              <IncludeBuildOutput>false</IncludeBuildOutput>
+              <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
+              <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+              <NoWarn>\$(NoWarn);NU5128</NoWarn>
+            </PropertyGroup>
+            <ItemGroup>
+              <None Include="${PWD}/artifacts/freebsd-x64/${LIB_NAME}" Pack="true" PackagePath="runtimes/freebsd-x64/native/" />
+              <None Include="${PWD}/artifacts/freebsd-arm64/${LIB_NAME}" Pack="true" PackagePath="runtimes/freebsd-arm64/native/" />
+            </ItemGroup>
+          </Project>
+          EOF
+
+          dotnet pack pack/Pack.csproj -c Release -o artifacts/nuget
+
+          unzip -l artifacts/nuget/*.nupkg
+          for rid in freebsd-x64 freebsd-arm64; do
+            unzip -l artifacts/nuget/*.nupkg | grep -q "runtimes/$rid/native/$LIB_NAME"
+          done
+
+      - name: Upload NuGet package
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: nupkg-${{ matrix.component }}-${{ matrix.package_version }}
+          path: artifacts/nuget/*.nupkg
+          if-no-files-found: error
+
+  # The FreeBSD VM is only used here: it publishes and runs the Avalonia smoke app
+  # against the freshly built native packages on a real FreeBSD.
+  smoke:
+    name: smoke-avalonia ${{ matrix.component }} ${{ matrix.package_version }} ${{ matrix.rid }}
+    needs:
+      - detect
+      - pack
+    if: ${{ !cancelled() && needs.detect.outputs.should_build == 'true' && needs.pack.result != 'skipped' }}
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.detect.outputs.build_matrix) }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    permissions:
+      contents: read
+    env:
+      RID: ${{ matrix.rid }}
+      AVALONIA_VERSION: "12.1.4"
+      SKIA_VERSION: ${{ matrix.skia_version }}
+      HB_VERSION: ${{ matrix.harfbuzz_version }}
+      SKIA_PKG_VERSION: ${{ matrix.skia_package_version }}
+      HB_PKG_VERSION: ${{ matrix.harfbuzz_package_version }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      # All packages built in this run. A counterpart package that was published by an
+      # earlier run is restored from nuget.org instead.
+      - name: Download NuGet packages
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          pattern: nupkg-*
+          path: artifacts/nuget
+          merge-multiple: true
+
+      # NOTE: pin this action to a commit SHA like the others once you pick a version.
+      # aarch64 runs under QEMU emulation, so restore/publish is very slow there.
+      - name: Publish and run Avalonia smoke app on FreeBSD
+        uses: vmactions/freebsd-vm@v1
+        with:
+          release: "14.3"
+          arch: ${{ matrix.freebsd_arch }}
+          usesh: true
+          copyback: false
+          envs: "RID AVALONIA_VERSION SKIA_VERSION HB_VERSION SKIA_PKG_VERSION HB_PKG_VERSION"
+          prepare: |
+            pkg install -y bash dotnet xorg-vfbserver fontconfig freetype2 dejavu expat \
+              libX11 libXcursor libXext libXfixes libXi libXinerama libXrandr libXrender libICE libSM
+          run: |
+            set -eu
+            export DOTNET_CLI_TELEMETRY_OPTOUT=1 DOTNET_NOLOGO=1
+
+            project_dir="$PWD/artifacts/avalonia-smoke-src"
+            publish_dir="$PWD/artifacts/smoke-$RID"
+            proj="$project_dir/AvaloniaStaticLinkSmoke.csproj"
+
+            # Assumes create-avalonia-smoke.sh can generate the app without the StaticLink
+            # packages when given --no-static-link.
+            bash scripts/create-avalonia-smoke.sh \
+              --project-dir "$project_dir" \
+              --nuget-source "$PWD/artifacts/nuget" \
+              --avalonia-version "$AVALONIA_VERSION" \
+              --no-static-link
+
+            cat > "$project_dir/NuGet.config" <<EOF
+            <?xml version="1.0" encoding="utf-8"?>
+            <configuration>
+              <packageSources>
+                <clear />
+                <add key="local" value="$PWD/artifacts/nuget" />
+                <add key="nuget.org" value="https://api.nuget.org/v3/index.json" />
+              </packageSources>
+            </configuration>
+            EOF
+
+            # Pin managed SkiaSharp/HarfBuzzSharp to the versions the native libs came from
+            dotnet add "$proj" package SkiaSharp --version "$SKIA_VERSION" --no-restore
+            dotnet add "$proj" package HarfBuzzSharp --version "$HB_VERSION" --no-restore
+            dotnet add "$proj" package BrycensRanch.SkiaSharp.NativeAssets.FreeBSD --version "$SKIA_PKG_VERSION" --no-restore
+            dotnet add "$proj" package BrycensRanch.HarfBuzzSharp.NativeAssets.FreeBSD --version "$HB_PKG_VERSION" --no-restore
+
+            dotnet publish "$proj" \
+              -c Release \
+              -r "$RID" \
+              --self-contained false \
+              -p:UseAppHost=false \
+              -p:PublishDir="$publish_dir/"
+
+            cd "$publish_dir"
+            ls -l
+            test -f libSkiaSharp.so
+            test -f libHarfBuzzSharp.so
+
+            Xvfb :99 -screen 0 1280x720x24 &
+            xvfb_pid=$!
+            export DISPLAY=:99
+            sleep 3
+
+            set +e
+            timeout 15 dotnet ./AvaloniaStaticLinkSmoke.dll
+            code=$?
+            set -e
+            kill "$xvfb_pid" 2>/dev/null || true
+
+            if [ "$code" = 124 ] || [ "$code" = 143 ]; then
+              echo "Avalonia FreeBSD smoke app stayed alive for 15 seconds."
+              exit 0
+            fi
+            exit "$code"
+
+      - name: Record verification
+        run: |
+          set -euo pipefail
+          mkdir -p verified
+          touch "verified/${{ matrix.package_id }}.${{ matrix.package_version }}.${{ matrix.rid }}"
+
+      - name: Upload verification marker
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: verified-${{ matrix.component }}-${{ matrix.package_version }}-${{ matrix.rid }}
+          path: verified/*
+          if-no-files-found: error
+
+  publish:
+    needs:
+      - detect
+      - pack
+      - smoke
+    # Only packages whose libraries passed smoke tests on BOTH architectures are pushed,
+    # so one broken version doesn't block the others.
+    if: ${{ !cancelled() && needs.detect.outputs.should_build == 'true' && needs.smoke.result != 'skipped' && (github.event_name == 'schedule' || inputs.publish_to_nuget == true) }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Download NuGet packages
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          pattern: nupkg-*
+          path: artifacts/nuget
+          merge-multiple: true
+
+      - name: Download verification markers
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          pattern: verified-*
+          path: artifacts/verified
+          merge-multiple: true
+
+      - name: Select verified packages
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/publish
+          shopt -s nullglob
+          for pkg in artifacts/nuget/*.nupkg; do
+            base="$(basename "$pkg" .nupkg)"
+            if [ -f "artifacts/verified/$base.freebsd-x64" ] && [ -f "artifacts/verified/$base.freebsd-arm64" ]; then
+              cp "$pkg" artifacts/publish/
+              echo "Verified: $base"
+            else
+              echo "::warning::Skipping $base: not verified on both architectures"
+            fi
+          done
+          test -n "$(ls artifacts/publish)"
+
+      - name: Validate Trusted Publishing configuration
+        env:
+          NUGET_USER: ${{ vars.NUGET_USER }}
+        run: test -n "$NUGET_USER"
+
+      - name: NuGet login
+        id: login
+        uses: NuGet/login@8d196754b4036150537f80ac539e15c2f1028841 # v1.2.0
+        with:
+          user: ${{ vars.NUGET_USER }}
+
+      - name: Publish to nuget.org
+        run: |
+          ls -l artifacts/publish
+          dotnet nuget push artifacts/publish/*.nupkg \
+            --source https://www.nuget.org/api/v2/package \
+            --api-key "${{ steps.login.outputs.NUGET_API_KEY }}" \
+            --skip-duplicate
