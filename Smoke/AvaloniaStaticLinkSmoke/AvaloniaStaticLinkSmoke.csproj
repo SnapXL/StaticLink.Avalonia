@@ -14,14 +14,14 @@
     <StripSymbols>true</StripSymbols>
     <InvariantGlobalization>true</InvariantGlobalization>
     <OptimizationPreference>Size</OptimizationPreference>
-    <AvaloniaVersion Condition="'$(AvaloniaVersion)' == ''">12.1.4</AvaloniaVersion>
+    <AvaloniaVersion Condition="'$(AvaloniaVersion)' == ''">12.1.6</AvaloniaVersion>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Avalonia" Version="$(AvaloniaVersion)" />
     <PackageReference Include="Avalonia.Desktop" Version="$(AvaloniaVersion)" />
-    <PackageReference Include="SkiaSharp" Version="4.156.0-preview.1.26512.10" />
-    <PackageReference Include="HarfBuzzSharp" Version="14.4.0.100-preview.1.26512.10" />
+    <PackageReference Include="SkiaSharp" Version="4.157.0-rc.1.26560.6" />
+    <PackageReference Include="HarfBuzzSharp" Version="15.0.0.100-preview.1.26563.22" />
     <PackageReference Include="BrycensRanch.StaticLink.Avalonia" Version="$(StaticLinkVersion)" Condition="'$(StaticLinkVersion)' != ''" />
     <PackageReference Include="BrycensRanch.StaticLink.Avalonia.Native" Version="$(StaticLinkNativeVersion)" Condition="'$(StaticLinkNativeVersion)' != ''" />
   </ItemGroup>

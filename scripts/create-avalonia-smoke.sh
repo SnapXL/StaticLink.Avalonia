@@ -4,7 +4,7 @@ set -eu
 PROJECT_DIR=""
 NUGET_SOURCE=""
 STATIC_LINK_VERSION=""
-AVALONIA_VERSION="12.1.4"
+AVALONIA_VERSION="12.1.6"
 STATIC_LINK_NATIVE_VERSION=""
 
 usage() {
@@ -15,7 +15,7 @@ Options:
   --project-dir DIR                    (required) Target project directory
   --nuget-source PATH                  (required) Path to local NuGet source
   --static-link-version VERSION        StaticLink.Avalonia package version
-  --avalonia-version VERSION           Avalonia version (default: 12.1.3)
+  --avalonia-version VERSION           Avalonia version (default: 12.1.6)
   --static-link-native-version VERSION StaticLink.Avalonia.Native package version
   -h, --help                           Show this help
 EOF

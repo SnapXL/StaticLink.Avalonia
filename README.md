@@ -16,14 +16,15 @@ Building an Avalonia program using NativeAOT generally entails dealing with comp
 Choose the static graphics package that matches the Avalonia and SkiaSharp major versions used by your application.
 
 | Avalonia version | SkiaSharp version | `BrycensRanch.StaticLink.Avalonia` version |
-| --- | --- | --- |
-| 12 | 4.156.0-preview.1 | `4.156.0-preview.1-8078.1` |
+|------------------|-------------------|--------------------------------------------|
+| 12               | 4.157.0-rc.1      | `4.157.0-rc.1-8103.1`                      |
+| 12               | 4.156.0-preview.1 | `4.156.0-preview.1-8078.1`                 |
 
 Example:
 ```xml
 <ItemGroup>
-  <PackageReference Include="Avalonia" Version="12.1.4" />
-  <PackageReference Include="BrycensRanch.StaticLink.Avalonia" Version="4.156.0-preview.1-8078.1" />
+  <PackageReference Include="Avalonia" Version="12.1.6" />
+  <PackageReference Include="BrycensRanch.StaticLink.Avalonia" Version="4.157.0-rc.1-8103.1" />
 </ItemGroup>
 ```
 
@@ -32,8 +33,8 @@ Example:
 For macOS, also reference `BrycensRanch.StaticLink.Avalonia.Native`. This package contains `libAvaloniaNative.a`, so its version must match the Avalonia version used by the application.
 
 ```xml
-<!-- Avalonia 12.1.4 -->
-<PackageReference Include="BrycensRanch.StaticLink.Avalonia.Native" Version="12.1.4.1" />
+<!-- Avalonia 12.1.6 -->
+<PackageReference Include="BrycensRanch.StaticLink.Avalonia.Native" Version="12.1.6.1" />
 ```
 
 Add only the `BrycensRanch.StaticLink.Avalonia.Native` reference matching your Avalonia version.

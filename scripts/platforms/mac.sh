@@ -6,7 +6,7 @@ REPO_ROOT="${REPO_ROOT:-$(cd "$(dirname "$0")/../.." && pwd)}"
 
 build_macos_avalonia_native() {
     rid="${RID:-osx-arm64}"
-    avalonia_version="${AVALONIA_VERSION:-12.1.3}"
+    avalonia_version="${AVALONIA_VERSION}"
     work_dir="${WORK_DIR:-$REPO_ROOT/External/AvaloniaNative/.work}"
     output_dir="${OUTPUT_DIR:-$REPO_ROOT/External/AvaloniaNative/$rid/native}"
     build_jobs="${BUILD_JOBS:-$(sysctl -n hw.ncpu 2>/dev/null || echo 4)}"
