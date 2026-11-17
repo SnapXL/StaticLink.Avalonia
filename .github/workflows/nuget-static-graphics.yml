@@ -49,7 +49,7 @@ jobs:
     with:
       skiasharp_version: ${{ needs.preflight.outputs.skiasharp_version }}
   pack:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-slim
     needs:
       - build-linux
       - build-musl
@@ -532,7 +532,7 @@ jobs:
                   raise SystemExit(f"Avalonia {renderer} smoke app failed with exit code {result.returncode}.")
           PY
   publish-nuget:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
     permissions:
       id-token: write
       contents: read
@@ -577,7 +577,7 @@ jobs:
           done
 
   release:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
     needs:
       - preflight
       - pack

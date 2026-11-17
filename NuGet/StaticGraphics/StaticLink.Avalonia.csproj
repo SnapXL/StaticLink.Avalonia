@@ -6,7 +6,7 @@
         <IncludeBuildOutput>false</IncludeBuildOutput>
         <SuppressDependenciesWhenPacking>false</SuppressDependenciesWhenPacking>
         <PackageId>BrycensRanch.StaticLink.Avalonia</PackageId>
-        <Version>4.157.0-rc.1-8103.1</Version>
+        <Version>4.157.0-rc.2-8103.1</Version>
         <Authors>greepar</Authors>
         <Company>greepar</Company>
         <Description>Static SkiaSharp, HarfBuzzSharp, and ANGLE libraries for Avalonia NativeAOT single-file publishing.</Description>
@@ -19,7 +19,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="SkiaSharp" Version="4.157.0-rc.1.26560.6" />
+        <PackageReference Include="SkiaSharp" Version="4.157.0-rc.2.26563.19" />
     </ItemGroup>
 
     <ItemGroup>

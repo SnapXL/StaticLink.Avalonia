@@ -26,7 +26,7 @@ concurrency:
 
 jobs:
   detect:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
     permissions:
       contents: read
     outputs:
@@ -113,7 +113,7 @@ jobs:
       - detect
       - build
     if: ${{ needs.detect.outputs.should_build == 'true' }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
     permissions:
       contents: read
     steps:
@@ -244,7 +244,7 @@ jobs:
       - detect
       - smoke
     if: ${{ needs.detect.outputs.should_build == 'true' && (github.event_name == 'schedule' || inputs.publish_to_nuget == true) }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
     permissions:
       contents: read
       id-token: write

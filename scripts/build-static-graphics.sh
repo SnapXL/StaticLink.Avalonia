@@ -41,7 +41,7 @@ if [ -z "${RID:-}" ]; then
 fi
 export RID
 OUTPUT_DIR="${OUTPUT_DIR:-$ROOT_DIR/External/NativeStatic/$RID}"
-SKIASHARP_VERSION="${SKIASHARP_VERSION:-4.157.0-rc.1}"
+SKIASHARP_VERSION="${SKIASHARP_VERSION:-4.157.0-rc.2}"
 BUILD_JOBS="${BUILD_JOBS:-$(nproc 2>/dev/null || echo 1)}"
 SKIA_DEPS_RETRIES="${SKIA_DEPS_RETRIES:-3}"
 CC="${CC:-clang}"
@@ -78,7 +78,7 @@ Usage: scripts/build-static-graphics.sh [skia]
 Environment:
   WORK_DIR            Source/build cache directory. Default: External/NativeStatic/.work
   OUTPUT_DIR          Final static library directory. Default: External/NativeStatic/$RID
-  SKIASHARP_VERSION   SkiaSharp release branch version. Default: 4.157.0-rc.1
+  SKIASHARP_VERSION   SkiaSharp release branch version. Default: 4.157.0-rc.2
   TARGET_CPU          GN target_cpu. Default: auto-detected
   TARGET_OS           GN target_os. Default: auto-detected
   RID                 Output RID. Default: $TARGET_OS-$TARGET_CPU

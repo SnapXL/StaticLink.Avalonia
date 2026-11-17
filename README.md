@@ -17,14 +17,14 @@ Choose the static graphics package that matches the Avalonia and SkiaSharp major
 
 | Avalonia version | SkiaSharp version | `BrycensRanch.StaticLink.Avalonia` version |
 |------------------|-------------------|--------------------------------------------|
-| 12               | 4.157.0-rc.1      | `4.157.0-rc.1-8103.1`                      |
+| 12               | 4.157.0-rc.2      | `4.157.0-rc.2-8103.1`                      |
 | 12               | 4.156.0-preview.1 | `4.156.0-preview.1-8078.1`                 |
 
 Example:
 ```xml
 <ItemGroup>
   <PackageReference Include="Avalonia" Version="12.1.6" />
-  <PackageReference Include="BrycensRanch.StaticLink.Avalonia" Version="4.157.0-rc.1-8103.1" />
+  <PackageReference Include="BrycensRanch.StaticLink.Avalonia" Version="4.157.0-rc.2-8103.1" />
 </ItemGroup>
 ```
 
