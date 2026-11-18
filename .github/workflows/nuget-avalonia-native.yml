@@ -77,9 +77,9 @@ jobs:
       matrix:
         include:
           - rid: osx-x64
-            runner: macos-15-intel
+            runner: macos-26-intel
           - rid: osx-arm64
-            runner: macos-15
+            runner: macos-26
     runs-on: ${{ matrix.runner }}
     permissions:
       contents: read
@@ -166,9 +166,9 @@ jobs:
       matrix:
         include:
           - rid: osx-x64
-            runner: macos-15-intel
+            runner: macos-26-intel
           - rid: osx-arm64
-            runner: macos-15
+            runner: macos-26
     runs-on: ${{ matrix.runner }}
     permissions:
       contents: read

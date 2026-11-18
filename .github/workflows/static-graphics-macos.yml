@@ -23,7 +23,7 @@ jobs:
             target_cpu: x64
           - rid: osx-arm64
             target_cpu: arm64
-    runs-on: macos-15
+    runs-on: macos-26
     env:
       SKIASHARP_VERSION: ${{ inputs.skiasharp_version }}
       RID: ${{ matrix.rid }}

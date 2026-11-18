@@ -166,10 +166,10 @@ jobs:
           - rid: linux-musl-arm64
             runner: ubuntu-24.04-arm
           - rid: osx-x64
-            runner: macos-15-intel
+            runner: macos-26-intel
             avalonia_version: 12.1.6
           - rid: osx-arm64
-            runner: macos-15
+            runner: macos-26
             avalonia_version: 12.1.6
     runs-on: ${{ matrix.runner }}
     steps:
@@ -428,7 +428,7 @@ jobs:
           if-no-files-found: error
 
   smoke-macos-metal:
-    runs-on: macos-15
+    runs-on: macos-26
     needs: pack
     permissions:
       contents: read
